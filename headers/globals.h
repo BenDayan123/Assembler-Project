@@ -33,66 +33,23 @@ typedef enum
 /** Supported CPU Opcodes */
 typedef enum
 {
-    /* Two Operands Group */
     MOV = 0,
     CMP,
     ADD,
     SUB,
     LEA,
-
-    /* One Operand Group */
-    NOT,
     CLR,
+    NOT,
     INC,
     DEC,
     JMP,
     BNE,
+    JSR,
     RED,
     PRN,
-    JSR,
-
-    /* No Operands Group */
     RTS,
-    STOP,
-
+    STOP
 } opcode_name;
-
-/**
- * The actual dictionary implementation.
- * ORDER MUST MATCH THE 'opcode_name' ENUM IN GLOBALS.H!
- */
-const cmd_info operations[] = {
-    /* { "name", opcode, funct, operand_count } */
-    {"mov", 0, 0, 2},  /* MOV (0) */
-    {"cmp", 1, 0, 2},  /* CMP (1) */
-    {"add", 2, 10, 2}, /* ADD (2) */
-    {"sub", 2, 11, 2}, /* SUB (3) */
-    {"lea", 6, 0, 2},  /* LEA (4) */
-    {"not", 4, 10, 1}, /* NOT (5) */
-    {"clr", 5, 10, 1}, /* CLR (6) */
-    {"inc", 5, 11, 1}, /* INC (7) */
-    {"dec", 5, 12, 1}, /* DEC (8) */
-    {"jmp", 9, 10, 1}, /* JMP (9) */
-    {"bne", 9, 11, 1}, /* BNE (10)*/
-    {"red", 11, 0, 1}, /* RED (11)*/
-    {"prn", 12, 0, 1}, /* PRN (12)*/
-    {"jsr", 9, 12, 1}, /* JSR (13)*/
-    {"rts", 14, 0, 0}, /* RTS (14)*/
-    {"stop", 15, 0, 0} /* STOP(15)*/
-};
-
-/** CPU Registers */
-typedef enum
-{
-    R0 = 0,
-    R1,
-    R2,
-    R3,
-    R4,
-    R5,
-    R6,
-    R7,
-} reg;
 
 /**
  * The "Value" structure of our dictionary.
@@ -105,6 +62,42 @@ typedef struct
     int funct;    /* The funct code (e.g., 10 for ADD, 11 for SUB) */
     int op_count; /* How many operands are required (0, 1, or 2) */
 } cmd_info;
+
+/**
+ * The actual dictionary implementation.
+ * ORDER MUST MATCH THE 'opcode_name' ENUM IN GLOBALS.H!
+ */
+const cmd_info operations[] = {
+    /* { "name", opcode, funct, operand_count } */
+    {"mov", 0, 0, 2},
+    {"cmp", 1, 0, 2},
+    {"add", 2, 10, 2},
+    {"sub", 2, 11, 2},
+    {"lea", 4, 0, 2},
+    {"clr", 5, 10, 1},
+    {"not", 5, 11, 1},
+    {"inc", 5, 12, 1},
+    {"dec", 5, 13, 1},
+    {"jmp", 9, 10, 1},
+    {"bne", 9, 11, 1},
+    {"jsr", 9, 12, 1},
+    {"red", 12, 0, 1},
+    {"prn", 13, 0, 1},
+    {"rts", 14, 0, 0},
+    {"stop", 15, 0, 0}};
+
+/** CPU Registers */
+typedef enum
+{
+    R0 = 0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7
+} reg;
 
 /** Addressing Modes for Operands */
 typedef enum
