@@ -24,4 +24,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 clean:
-	rm -rf $(BUILD_DIR) $(TARGET)
+	rm -rf $(wildcard $(BUILD_DIR)/*.o) $(TARGET)
