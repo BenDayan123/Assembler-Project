@@ -9,7 +9,7 @@
 /* CONSTANTS & MACROS                        */
 /* ========================================= */
 
-/** Boolean logic for ANSI-C (C90) */
+/* Boolean logic for ANSI-C (C90) */
 typedef enum
 {
     FALSE = 0,
@@ -27,10 +27,10 @@ typedef enum
 #define ARE_RELOCATABLE 2 /* R: Relocatable (internal label) */
 
 /* ========================================= */
-/* MACHINE ARCHITECTURE ENUMS                */
+/* MACHINE ARCHITECTURE                      */
 /* ========================================= */
 
-/** Supported CPU Opcodes */
+/* Supported CPU Opcodes */
 typedef enum
 {
     MOV = 0,
@@ -51,7 +51,7 @@ typedef enum
     STOP
 } opcode_name;
 
-/**
+/*
  * The "Value" structure of our dictionary.
  * Holds all metadata for a specific command.
  */
@@ -63,9 +63,9 @@ typedef struct
     int op_count; /* How many operands are required (0, 1, or 2) */
 } cmd_info;
 
-/**
+/*
  * The actual dictionary implementation.
- * ORDER MUST MATCH THE 'opcode_name' ENUM IN GLOBALS.H!
+ * -> NOTE: THE ORDER MUST MATCH THE 'opcode_name' ENUM IN THIS FILE! <-
  */
 const cmd_info operations[] = {
     /* { "name", opcode, funct, operand_count } */
@@ -86,7 +86,7 @@ const cmd_info operations[] = {
     {"rts", 14, 0, 0},
     {"stop", 15, 0, 0}};
 
-/** CPU Registers */
+/* CPU Registers */
 typedef enum
 {
     R0 = 0,
@@ -99,17 +99,17 @@ typedef enum
     R7
 } reg;
 
-/** Addressing Modes for Operands */
+/* Addressing Modes for Operands */
 typedef enum
 {
     IMMEDIATE_ADDR = 0, /* e.g., #5 */
     DIRECT_ADDR = 1,    /* e.g., LABEL */
     INDEX_ADDR = 2,     /* e.g., LABEL[r2] */
-    REGISTER_ADDR = 3,  /* e.g., r3 */
+    REGISTER_ADDR = 3   /* e.g., r3 */
 } addressing_mode;
 
 /* ========================================= */
-/* GLOBAL STATE                              */
+/* GLOBAL VARIABLES                          */
 /* ========================================= */
 
 extern const cmd_info operations[];
