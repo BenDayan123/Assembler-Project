@@ -1,11 +1,18 @@
+# =========================================
+# Assembler Project - Makefile
+# =========================================
+
+# Compiler and Flags
 CC = gcc
 CFLAGS = -Wall -ansi -pedantic
 
+# Directories
 SRC_DIR = src
 OUT_DIR = output
 BUILD_DIR = build
 
-OBJS = $(BUILD_DIR)/main.o $(BUILD_DIR)/utils.o
+SRCS = $(wildcard $(SRC_DIR)/*.c) # This automatically finds all .c files in /src directory
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(BUILD_DIR)/%.o, $(SRCS))
 TARGET = main
 
 all: $(TARGET)
@@ -17,4 +24,4 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 	
 clean:
-	rm -f $(BUILD_DIR)
+	rm -rf $(BUILD_DIR) $(TARGET)
