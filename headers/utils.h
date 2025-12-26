@@ -1,3 +1,3 @@
 #include <stdio.h>
 
-int convert_to_binary(unsigned int number);
+char *convert_to_binary(unsigned int num, unsigned int binary_length);
