@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "../headers/node.h"
 #include "../headers/utils.h"
 #include "../headers/error.h"
 
 node *create_node(char *value, char *content)
 {
-    node *temp = handle_malloc(sizeof(node));
+    node *temp = (node *)handle_malloc(sizeof(node));
 
     temp->value = value;
     temp->content = content;
@@ -21,7 +22,7 @@ void add_node(node **head, node *new)
     node *search = search_node(*head, new->value, &found);
     if (found)
     {
-        print_error(1); // NEED TO BE CHANGED!
+        print_error(1); /* NEEDS TO BE CHANGED! */
         free(head);
         return;
     }
@@ -55,8 +56,6 @@ node *search_node(node *head, char *value, int *found)
 
 void free_node(node *n)
 {
-    free(n->value);
-    free(n->content);
     free(n);
 }
 

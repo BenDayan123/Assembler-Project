@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "../headers/error.h"
 #include "../headers/globals.h"
 
@@ -73,10 +74,8 @@ char *handle_malloc(size_t size)
 char *filename_with_ext(char *filename, const char *ext)
 {
     char *new_filename = (char *)handle_malloc(strlen(filename) + strlen(ext) + 2);
-    strcpy(new_filename, filename);
-    strcat(filename, ".");
-    strncat(filename, ext, 6);
-    return filename;
+    sprintf(new_filename, "%s.%s", filename, ext);
+    return new_filename;
 }
 
 /*
