@@ -61,30 +61,7 @@ typedef struct
     int opcode;   /* The machine opcode (e.g., 2 for ADD/SUB) */
     int funct;    /* The funct code (e.g., 10 for ADD, 11 for SUB) */
     int op_count; /* How many operands are required (0, 1, or 2) */
-} cmd_info;
-
-/*
- * The actual dictionary implementation.
- * -> NOTE: THE ORDER MUST MATCH THE 'opcode_name' ENUM IN THIS FILE! <-
- */
-const cmd_info operations[] = {
-    /* { "name", opcode, funct, operand_count } */
-    {"mov", 0, 0, 2},
-    {"cmp", 1, 0, 2},
-    {"add", 2, 10, 2},
-    {"sub", 2, 11, 2},
-    {"lea", 4, 0, 2},
-    {"clr", 5, 10, 1},
-    {"not", 5, 11, 1},
-    {"inc", 5, 12, 1},
-    {"dec", 5, 13, 1},
-    {"jmp", 9, 10, 1},
-    {"bne", 9, 11, 1},
-    {"jsr", 9, 12, 1},
-    {"red", 12, 0, 1},
-    {"prn", 13, 0, 1},
-    {"rts", 14, 0, 0},
-    {"stop", 15, 0, 0}};
+} CmdInfo;
 
 /* CPU Registers */
 typedef enum
@@ -112,6 +89,6 @@ typedef enum
 /* GLOBAL VARIABLES                          */
 /* ========================================= */
 
-extern const cmd_info operations[];
+extern const CmdInfo operations[];
 
 #endif
