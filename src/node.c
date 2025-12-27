@@ -35,22 +35,31 @@ void add_node(node *head, node *new_node)
 
     if (!head || !new_node)
         return;
+
     current = head;
     while (current->next != NULL)
+    {
+        if (strcmp(new_node->key, current->key) == 0)
+        {
+            free_node(new_node);
+            return;
+        }
         current = current->next;
-    current->next = new_node;
+    }
+    if (strcmp(new_node->key, current->key) == 0)
+        return;
+    else
+        current->next = new_node;
 }
 
-node *search_node(node *head, char *key, int *found)
+node *search_node(node *head, char *key)
 {
     node *current = head;
-    *found = 0;
 
     while (current != NULL)
     {
         if (strcmp(current->key, key) == 0)
         {
-            *found = 1;
             return current;
         }
         current = current->next;

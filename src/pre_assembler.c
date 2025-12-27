@@ -23,30 +23,45 @@ void add_macro_line(node *macro, char *line)
         temp->content = (char *)realloc(temp->content, new_len);
         if (!(temp->content))
         {
-            printf("realloc error...");
+            /* FIXME: handle realloc error !!!! */
+            printf("Realloc Error...");
             return;
         }
-        /* FIXME: handle realloc error !!!! */
         strcat(temp->content, line);
     }
 }
 
-boolean run_pre_assembler(char *as_file)
+/* ========================================= */
+/* Main Logic                                */
+/* ========================================= */
+
+boolean run_pre_assembler(char *filename)
 {
-    FILE *file;
+    FILE *file_in, *file_out;
+    char *am_filename, *as_filename;
     char line[MAX_LINE_LEN], first_word[MAX_LINE_LEN];
     boolean inside_mcro = FALSE;
     node *macro_list = create_node(NULL, NULL);
     node *curr_macro = macro_list;
 
-    file = fopen(as_file, "r");
-    if (file == NULL)
+    as_filename = filename_with_ext(filename, "as");
+    am_filename = filename_with_ext(filename, "am");
+
+    file_in = fopen(as_filename, "r");
+    if (file_in == NULL)
     {
-        printf("Could not open file '%s'\n\n", as_file);
-        fclose(file);
+        printf("Error: Could not open file '%s'\n\n", as_filename);
+        fclose(file_in);
         return FALSE;
     }
-    while (fgets(line, MAX_LINE_LEN, file))
+    file_out = fopen(am_filename, "w");
+    if (!file_out)
+    {
+        printf("Error: Cannot create file %s\n", am_filename);
+        fclose(file_in);
+        return FALSE;
+    }
+    while (fgets(line, MAX_LINE_LEN, file_in))
     {
         char *skip = skip_whitespaces(line);
         sscanf(skip, "%s", first_word);
@@ -58,16 +73,21 @@ boolean run_pre_assembler(char *as_file)
             node *new_macro;
             sscanf(skip, "%*s %s", macro_name);
             new_macro = create_node(macro_name, NULL);
-            add_node(curr_macro, new_macro);
+            add_node(macro_list, new_macro);
             curr_macro = new_macro;
             inside_mcro = TRUE;
         }
         else if (inside_mcro)
             add_macro_line(curr_macro, skip);
+        else
+        {
+            node *found_macro = search_node(macro_list, first_word);
+            fputs((found_macro == NULL) ? skip : found_macro->content, file_out);
+        }
     }
     macro_list = macro_list->next;
     print_list(macro_list);
     free_nodes(macro_list);
-    fclose(file);
+    fclose(file_in);
     return TRUE;
 }
