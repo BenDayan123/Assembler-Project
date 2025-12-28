@@ -45,7 +45,7 @@ boolean run_pre_assembler(char *filename)
     node *curr_macro = macro_list;
 
     as_filename = filename_with_ext(filename, "as");
-    am_filename = filename_with_ext(filename, "am");
+    am_filename = join_path_and_ext(filename, "am", "output");
 
     file_in = fopen(as_filename, "r");
     if (file_in == NULL)
@@ -86,8 +86,8 @@ boolean run_pre_assembler(char *filename)
         }
     }
     macro_list = macro_list->next;
-    print_list(macro_list);
     free_nodes(macro_list);
     fclose(file_in);
+    fclose(file_out);
     return TRUE;
 }
