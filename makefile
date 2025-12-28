@@ -25,3 +25,6 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	
 clean:
 	rm -rf $(wildcard $(BUILD_DIR)/*.o) $(TARGET)
+
+clean_out:
+	rm -rf $(wildcard $(OUT_DIR)/*.am)
