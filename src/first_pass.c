@@ -17,7 +17,7 @@ boolean is_label(char *label)
         if (!isalnum(temp[i++]))
             return FALSE;
     }
-    // TODO: Checked if it's not a register, command or instruction
+    /* TODO: Checked if it's not a register, command or instruction */
     return TRUE;
 }
 
@@ -28,19 +28,58 @@ int is_directive(const char *word)
 
 int calc_DC(char *args, const char *type)
 {
-    int count = 0;
-
     if (strcmp(type, "string") == 0)
     {
-        char *start = strchr(args, '"'); /* Search from the left */
-        char *end = strrchr(args, '"');  /* Search from the right */
-        if (start && end && start < end)
+        char string[MAX_LINE_LEN], *start, *end;
+        get_next_word(&args, string, FALSE);
+        start = strchr(string, '"');
+        end = strrchr(string, '"');
+        if (start && end && end > start)
             return end - start;
+        printf("Error: Invalid string format.\n");
         return -1;
     }
     if (strcmp(type, "data") == 0)
+        return count_and_validate_data_numbers(args);
+    return -1;
+}
+int calc_IC(char *op_name, char *args)
+{
+    char *ptr = args;
+    char arg1[MAX_LINE_LEN] = {0}, arg2[MAX_LINE_LEN] = {0};
+    int found_ops = 0;
+    CmdInfo *inst = find_cmd_info(op_name);
+
+    if (inst == NULL)
     {
-        /* Needs to be completed */
+        printf("Error: Undefined instruction name '%s'.\n", op_name);
+        return -1;
+    }
+
+    get_next_word(&ptr, arg1, inst->op_count > 0);
+    get_next_word(&ptr, arg2, inst->op_count > 1);
+
+    found_ops += (arg1[0] != '\0') ? 1 : 0;
+    found_ops += (arg2[0] != '\0') ? 1 : 0;
+
+    if (found_ops != inst->op_count)
+    {
+        printf("Error: '%s' expects %d operands, found %d.\n",
+               op_name, inst->op_count, found_ops);
+        return -1;
+    }
+
+    return 1 + inst->op_count;
+}
+
+void update_data_symbols_address(SymbolTable *table, int final_IC)
+{
+    int i;
+    for (i = 0; i < table->count; i++)
+    {
+        symbol *sym = &table->symbols[i];
+        if (sym->type == SYMBOL_DATA)
+            sym->address += final_IC;
     }
 }
 
@@ -65,33 +104,29 @@ int run_first_pass(char *am_filename)
     while (fgets(line, MAX_LINE_LEN, file_in))
     {
         boolean is_label_found = FALSE;
-        char symbol_name[MAX_LABEL_LEN];
-        char *curr_pos = line;
+        char symbol_name[MAX_LABEL_LEN], first_word[MAX_LINE_LEN];
+        char *ptr = line;
 
         line_number++;
-        get_first_word(curr_pos, curr_word);
-
-        if (curr_pos == NULL || curr_pos[0] == '\0' || curr_pos[0] == ';')
+        if (ptr == NULL || ptr[0] == '\0' || ptr[0] == ';')
             continue;
 
+        get_first_word(ptr, first_word);
         /* Handle Label*/
-        if (strchr(curr_word, ':'))
+        if (strchr(first_word, ':'))
         {
+            get_next_word(&ptr, curr_word, FALSE);
             curr_word[strlen(curr_word) - 1] = '\0';
             if (is_label(curr_word))
             {
-                printf("Valid => '%s'\n", curr_word);
                 is_label_found = TRUE;
                 strcpy(symbol_name, curr_word);
-                curr_pos = strchr(curr_pos, ':') + 1;
-                curr_pos = skip_whitespaces(curr_pos);
             }
             else
-                printf("Invalid => '%s'\n", curr_word);
+                continue;
         }
 
-        get_next_word(curr_pos, curr_word);
-
+        get_next_word(&ptr, curr_word, FALSE);
         /* Handle Instruction */
         if (is_directive(curr_word))
         {
@@ -102,31 +137,46 @@ int run_first_pass(char *am_filename)
                 int size;
                 if (is_label_found)
                 {
-                    if (!find_symbol(table, symbol_name))
+                    if (find_symbol(table, symbol_name) == NULL)
                         add_symbol(table, symbol_name, DC, SYMBOL_DATA, FALSE);
                     else
                     {
-                        // FIXME: Handle this error
+                        /* FIXME: Handle this error */
                         printf("Error: in .data or .string\n");
                     }
                 }
-                size = calc_DC(curr_pos, curr_word);
-                if (size < 0)
-                    printf("Error: Invalid data format.\n");
-                else
+                size = calc_DC(ptr, curr_word);
+                if (size > 0)
                     DC += size;
             }
             else if (strcmp(curr_word, "extern") == 0)
             {
-                char ext_val[MAX_LABEL_LEN];
-                curr_pos = skip_whitespaces(curr_pos);
-                get_next_word(curr_pos, ext_val);
-
-                add_symbol(table, ext_val, 0, SYMBOL_EXTERN, FALSE);
+                char extern_name[MAX_LINE_LEN];
+                get_next_word(&ptr, extern_name, FALSE);
+                add_symbol(table, extern_name, 0, SYMBOL_EXTERN, FALSE);
             }
             else if (strcmp(curr_word, "entry") == 0)
                 continue;
         }
+
+        /* Handle Commands */
+        else
+        {
+            int size;
+            if (is_label_found)
+            {
+                if (!find_symbol(table, symbol_name))
+                    add_symbol(table, symbol_name, IC, SYMBOL_CODE, FALSE);
+                else
+                    printf("Error here!");
+            }
+
+            size = calc_IC(curr_word, ptr);
+            if (size > 0)
+                IC += size;
+        }
     }
+    update_data_symbols_address(table, IC);
+    print_symbol_table(table);
     return TRUE;
 }
