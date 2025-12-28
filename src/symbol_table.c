@@ -3,6 +3,7 @@
 #include "../headers/symbol_table.h"
 #include "../headers/utils.h"
 #include "../headers/globals.h"
+#include "../headers/error.h"
 
 #define INITIAL_CAPACITY 10
 
@@ -11,16 +12,16 @@ SymbolTable *create_table()
     SymbolTable *table = (SymbolTable *)malloc(sizeof(SymbolTable));
     if (!table)
     {
-        printf("Error: Memory allocation error\n");
+        log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
         return NULL;
     }
     table->capacity = INITIAL_CAPACITY;
     table->count = 0;
 
-    table->symbols = (SymbolTable *)malloc(table->capacity * sizeof(symbol));
+    table->symbols = (symbol *)malloc(table->capacity * sizeof(symbol));
     if (!(table->symbols))
     {
-        printf("Error: Memory allocation error\n");
+        log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
         free(table);
     }
     return table;
@@ -36,7 +37,7 @@ void add_symbol(SymbolTable *table, const char *name, int address, symbol_type t
         symbol *temp = (symbol *)realloc(table->symbols, new_capacity * sizeof(symbol));
         if (!temp)
         {
-            printf("Error: Memory allocation error\n");
+            log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
             return;
         }
         table->symbols = temp;
@@ -45,7 +46,7 @@ void add_symbol(SymbolTable *table, const char *name, int address, symbol_type t
     table->symbols[count].name = (char *)malloc(strlen(name) + 1);
     if (!(table->symbols[count].name))
     {
-        printf("Error: Memory allocation error\n");
+        log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
         return;
     }
     strcpy(current->name, name);
@@ -75,4 +76,49 @@ void free_table(SymbolTable *table)
         free(table->symbols[i].name);
     free(table->symbols);
     free(table);
+}
+
+/* For Debugging ONLY !! */
+const char *get_type_string(symbol_type type)
+{
+    switch (type)
+    {
+    case SYMBOL_CODE:
+        return "code";
+    case SYMBOL_DATA:
+        return "data";
+    case SYMBOL_EXTERN:
+        return "external";
+    default:
+        return "unknown";
+    }
+}
+
+void print_symbol_table(SymbolTable *table)
+{
+    int i;
+    if (table == NULL)
+    {
+        printf("Symbol table is NULL.\n");
+        return;
+    }
+
+    printf("\n");
+    printf("================ SYMBOL TABLE ================\n");
+
+    printf("| %-15s | %-9s | %-10s |\n", "Symbol Name", "Address", "Type");
+    printf("|-----------------|-----------|------------|\n");
+
+    for (i = 0; i < table->count; i++)
+    {
+        symbol *s = &table->symbols[i];
+
+        printf("| %-15s | %03d       | %-10s |\n",
+               s->name,
+               s->address,
+               get_type_string(s->type));
+    }
+
+    printf("==============================================\n");
+    printf("Total Symbols: %d\n\n", table->count);
 }

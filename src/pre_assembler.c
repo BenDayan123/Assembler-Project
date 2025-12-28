@@ -4,6 +4,7 @@
 #include "../headers/utils.h"
 #include "../headers/node.h"
 #include "../headers/globals.h"
+#include "../headers/error.h"
 
 /* ========================================= */
 /* Internal Helper Functions                 */
@@ -23,8 +24,7 @@ void add_macro_line(node *macro, char *line)
         temp->content = (char *)realloc(temp->content, new_len);
         if (!(temp->content))
         {
-            /* FIXME: handle realloc error !!!! */
-            printf("Realloc Error...");
+            log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
             return;
         }
         strcat(temp->content, line);
@@ -50,6 +50,7 @@ boolean run_pre_assembler(char *filename)
     file_in = fopen(as_filename, "r");
     if (file_in == NULL)
     {
+        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
         printf("Error: Could not open file '%s'\n\n", as_filename);
         fclose(file_in);
         return FALSE;
@@ -57,7 +58,7 @@ boolean run_pre_assembler(char *filename)
     file_out = fopen(am_filename, "w");
     if (!file_out)
     {
-        printf("Error: Cannot create file %s\n", am_filename);
+        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
         fclose(file_in);
         return FALSE;
     }

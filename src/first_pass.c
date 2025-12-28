@@ -4,6 +4,7 @@
 #include "../headers/first_pass.h"
 #include "../headers/globals.h"
 #include "../headers/symbol_table.h"
+#include "../headers/error.h"
 #include "../headers/utils.h"
 
 boolean is_label(char *label)
@@ -36,7 +37,7 @@ int calc_DC(char *args, const char *type)
         end = strrchr(string, '"');
         if (start && end && end > start)
             return end - start;
-        printf("Error: Invalid string format.\n");
+        log_error(ERR_INVALID_STRING, 0, NULL, NULL);
         return -1;
     }
     if (strcmp(type, "data") == 0)
@@ -97,7 +98,7 @@ int run_first_pass(char *am_filename)
 
     if (file_in == NULL)
     {
-        printf("Error: Could not open file '%s'\n\n", am_filename);
+        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
         fclose(file_in);
         return FALSE;
     }
@@ -112,6 +113,7 @@ int run_first_pass(char *am_filename)
             continue;
 
         get_first_word(ptr, first_word);
+
         /* Handle Label*/
         if (strchr(first_word, ':'))
         {
@@ -141,8 +143,9 @@ int run_first_pass(char *am_filename)
                         add_symbol(table, symbol_name, DC, SYMBOL_DATA, FALSE);
                     else
                     {
-                        /* FIXME: Handle this error */
-                        printf("Error: in .data or .string\n");
+                        char err_msg[MAX_LINE_LEN];
+                        sprintf(err_msg, "name: '%s'", symbol_name);
+                        log_error(ERR_SYMBOL_ALREADY_DEFINED, line_number, am_filename, err_msg);
                     }
                 }
                 size = calc_DC(ptr, curr_word);
@@ -168,7 +171,11 @@ int run_first_pass(char *am_filename)
                 if (!find_symbol(table, symbol_name))
                     add_symbol(table, symbol_name, IC, SYMBOL_CODE, FALSE);
                 else
-                    printf("Error here!");
+                {
+                    char err_msg[MAX_LINE_LEN];
+                    sprintf(err_msg, "name: '%s'", symbol_name);
+                    log_error(ERR_SYMBOL_ALREADY_DEFINED, line_number, am_filename, err_msg);
+                }
             }
 
             size = calc_IC(curr_word, ptr);

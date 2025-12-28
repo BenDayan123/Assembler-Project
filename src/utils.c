@@ -78,7 +78,7 @@ void *handle_malloc(size_t size)
 {
     void *ptr = malloc(size);
     if (ptr == NULL)
-        print_error(1); /* NEEDS TO BE CHANGED! */
+        log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
     return ptr;
 }
 
@@ -172,13 +172,13 @@ int count_and_validate_data_numbers(char *line)
             strtol(ptr, &end_ptr, 10);
             if (*ptr == ',')
             {
-                printf("Error: Unexpected comma (consecutive or leading).\n");
+                log_error(ERR_MULTIPLE_COMMAS, 0, NULL, NULL);
                 return -1;
             }
 
             if (ptr == end_ptr)
             {
-                printf("Error: Expected a number, found '%c'.\n", *ptr);
+                log_error(ERR_INVALID_NUMBER, 0, NULL, NULL);
                 return -1;
             }
 
@@ -201,7 +201,7 @@ int count_and_validate_data_numbers(char *line)
             }
             else
             {
-                printf("Error: Missing comma between numbers.\n");
+                log_error(ERR_MISSING_COMMA, 0, NULL, NULL);
                 return -1;
             }
         }
@@ -209,7 +209,7 @@ int count_and_validate_data_numbers(char *line)
 
     if (!expecting_comma)
     {
-        printf("Error: Trailing comma without a number.\n");
+        log_error(ERR_COMMA_AT_END, 0, NULL, NULL);
         return -1;
     }
 

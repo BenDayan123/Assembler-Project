@@ -18,7 +18,7 @@ node *create_node(char *key, char *content)
 
     if (!(temp->key) || !(temp->content))
     {
-        printf("Error: Memory allocation failed for strings.\n");
+        log_error(ERR_OPEN_FILE, 0, NULL, NULL);
         free_node(temp);
         return NULL;
     }

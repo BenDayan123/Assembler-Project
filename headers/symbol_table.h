@@ -30,4 +30,6 @@ void add_symbol(SymbolTable *table, const char *name, int address, symbol_type t
 symbol *find_symbol(SymbolTable *table, const char *name);
 void free_table(SymbolTable *table);
 
+void print_symbol_table(SymbolTable *table);
+
 #endif
