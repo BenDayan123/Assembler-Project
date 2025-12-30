@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
+#include <limits.h>
 #include <ctype.h>
 #include "../headers/error.h"
 #include "../headers/globals.h"
@@ -9,7 +11,7 @@
  * -> NOTE: THE ORDER MUST MATCH THE 'opcode_name' ENUM IN 'globals.h' FILE! <-
  */
 const CmdInfo operations[] = {
-    /* { "name", opcode, funct, operand_count } */
+    /* { "name", opcode, funct, op_count } */
     {"mov", 0, 0, 2},
     {"cmp", 1, 0, 2},
     {"add", 2, 10, 2},
@@ -25,7 +27,8 @@ const CmdInfo operations[] = {
     {"red", 12, 0, 1},
     {"prn", 13, 0, 1},
     {"rts", 14, 0, 0},
-    {"stop", 15, 0, 0}};
+    {"stop", 15, 0, 0},
+    {NULL, 0, 0, 0}};
 
 char *convert_to_binary(unsigned int num, unsigned int binary_length)
 {
@@ -84,14 +87,18 @@ void *handle_malloc(size_t size)
 
 char *filename_with_ext(char *filename, const char *ext)
 {
-    char *new_filename = (char *)handle_malloc(strlen(filename) + strlen(ext) + 1);
+    char *new_filename = (char *)malloc(strlen(filename) + strlen(ext) + 2);
+    if (new_filename == NULL)
+        return NULL;
     sprintf(new_filename, "%s.%s", filename, ext);
     return new_filename;
 }
 
 char *join_path_and_ext(char *filename, const char *ext, const char *path)
 {
-    char *new_filename = (char *)handle_malloc(strlen(filename) + strlen(ext) + strlen(path) + 1);
+    char *new_filename = (char *)malloc(strlen(filename) + strlen(ext) + strlen(path) + 3);
+    if (new_filename == NULL)
+        return NULL;
     sprintf(new_filename, "%s/%s.%s", path, filename, ext);
     return new_filename;
 }
@@ -123,8 +130,8 @@ int get_next_word(char **src, char *dest, boolean expect_comma)
     char *curr = *src;
     int i = 0;
     if (*curr == '\0')
-        return;
-    memset(dest, '\0', strlen(dest));
+        return -1;
+    *dest = '\0';
     curr = skip_whitespaces(curr);
 
     if (expect_comma)
@@ -161,39 +168,43 @@ int count_and_validate_data_numbers(char *line)
 
     ptr = skip_whitespaces(ptr);
 
-    if (*ptr == '\0')
+    if (ptr == NULL || *ptr == '\0')
+    {
+        log_error(ERR_MISSING_OPERAND, 0, NULL, ".data");
         return 0;
+    }
 
     while (*ptr != '\0')
     {
         if (!expecting_comma)
         {
-            char *end_ptr;
-            strtol(ptr, &end_ptr, 10);
+            char *endptr;
+            strtol(ptr, &endptr, 10);
+
             if (*ptr == ',')
             {
-                log_error(ERR_MULTIPLE_COMMAS, 0, NULL, NULL);
+                log_error(ERR_COMMA_AT_START, 0, NULL, ".data");
                 return -1;
             }
-
-            if (ptr == end_ptr)
+            if (ptr == endptr)
             {
                 log_error(ERR_INVALID_NUMBER, 0, NULL, NULL);
                 return -1;
             }
-
+            if (*endptr != '\0' && !isspace(*endptr) && *endptr != ',')
+            {
+                log_error(ERR_INVALID_NUMBER, 0, NULL, "Float or invalid characters");
+                return -1;
+            }
             count++;
-            ptr = end_ptr;
+            ptr = endptr;
             expecting_comma = TRUE;
         }
-
         else
         {
             ptr = skip_whitespaces(ptr);
-
             if (*ptr == '\0')
                 break;
-
             if (*ptr == ',')
             {
                 ptr++;
@@ -206,17 +217,39 @@ int count_and_validate_data_numbers(char *line)
             }
         }
     }
-
     if (!expecting_comma)
     {
-        log_error(ERR_COMMA_AT_END, 0, NULL, NULL);
+        log_error(ERR_COMMA_AT_END, 0, NULL, ".data");
         return -1;
     }
-
     return count;
 }
 
 int is_register(const char *op)
 {
     return (strlen(op) == 2 && op[0] == 'r' && op[1] >= '0' && op[1] <= '7');
+}
+
+boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filename)
+{
+    char *ptr = args;
+    char curr_arg[MAX_LINE_LEN] = {0};
+    int found_ops = 0, i;
+    CmdInfo *cmd = find_cmd_info(cmd_name);
+
+    if (cmd == NULL)
+        return log_error(ERR_UNKNOWN_INSTRUCTION, line, filename, cmd_name);
+
+    for (i = 0; i < cmd->op_count; i++)
+    {
+        curr_arg[0] = '\0';
+        get_next_word(&ptr, curr_arg, i < cmd->op_count - 1);
+        found_ops += (curr_arg[0] != '\0') ? 1 : 0;
+    }
+    ptr = skip_whitespaces(ptr);
+    if (*ptr != '\0')
+        return log_error(ERR_TOO_MANY_OPERANDS, line, filename, cmd_name);
+    if (found_ops < cmd->op_count)
+        return log_error(ERR_MISSING_OPERAND, line, filename, cmd_name);
+    return TRUE;
 }

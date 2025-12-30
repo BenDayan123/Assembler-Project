@@ -49,41 +49,35 @@ boolean run_pre_assembler(char *filename)
 
     file_in = fopen(as_filename, "r");
     if (file_in == NULL)
-    {
-        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
-        printf("Error: Could not open file '%s'\n\n", as_filename);
-        fclose(file_in);
-        return FALSE;
-    }
+        return log_error(ERR_OPEN_FILE, 0, NULL, as_filename);
     file_out = fopen(am_filename, "w");
     if (!file_out)
-    {
-        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
-        fclose(file_in);
-        return FALSE;
-    }
+        return log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
     while (fgets(line, MAX_LINE_LEN, file_in))
     {
-        char *skip = skip_whitespaces(line);
-        sscanf(skip, "%s", first_word);
+        char *ptr = skip_whitespaces(line);
+        first_word[0] = '\0';
+        if (ptr == NULL || ptr[0] == '\0' || ptr[0] == ';')
+            continue;
+        sscanf(ptr, "%s", first_word);
         if (strcmp(first_word, "mcroend") == 0)
             inside_mcro = FALSE;
         else if (strcmp(first_word, "mcro") == 0)
         {
-            char macro_name[MAX_LABEL_LEN];
+            char macro_name[MAX_LABEL_LEN] = {0};
             node *new_macro;
-            sscanf(skip, "%*s %s", macro_name);
+            sscanf(ptr, "%*s %s", macro_name);
             new_macro = create_node(macro_name, NULL);
             add_node(macro_list, new_macro);
             curr_macro = new_macro;
             inside_mcro = TRUE;
         }
         else if (inside_mcro)
-            add_macro_line(curr_macro, skip);
+            add_macro_line(curr_macro, ptr);
         else
         {
             node *found_macro = search_node(macro_list, first_word);
-            fputs((found_macro == NULL) ? skip : found_macro->content, file_out);
+            fputs((found_macro == NULL) ? ptr : found_macro->content, file_out);
         }
     }
     macro_list = macro_list->next;
