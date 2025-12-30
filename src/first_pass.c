@@ -44,12 +44,6 @@ int calc_DC(char *args, const char *type)
             log_error(ERR_INVALID_STRING, 0, NULL, ".string");
             return -1;
         }
-        if (*(end + 1) != '\0')
-        {
-            /* TODO: FIX THIS IF STATEMENT*/
-            log_error(ERR_TOO_MANY_OPERANDS, 0, NULL, ".string");
-            return -1;
-        }
         if (end > start)
             return end - start;
         log_error(ERR_INVALID_STRING, 0, NULL, ".string");
@@ -98,9 +92,8 @@ void update_data_symbols_address(SymbolTable *table, int final_IC)
 /* Main Logic                                */
 /* ========================================= */
 
-int run_first_pass(char *am_filename)
+int run_first_pass(char *am_filename, SymbolTable *table)
 {
-    SymbolTable *table = create_table();
     int IC = IC_INIT_VALUE, DC = 0;
     char line[MAX_LINE_LEN], curr_word[MAX_LINE_LEN];
     int line_number = 0, L;
