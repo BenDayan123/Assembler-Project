@@ -6,6 +6,7 @@
 
 char *convert_to_binary(unsigned int num, unsigned int binary_length);
 CmdInfo *find_cmd_info(char *cmd);
+boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filename);
 char *filename_with_ext(char *filename, const char *ext);
 char *join_path_and_ext(char *filename, const char *ext, const char *path);
 char *skip_whitespaces(char *str);
