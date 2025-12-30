@@ -55,7 +55,7 @@ typedef enum
  * The "Value" structure of our dictionary.
  * Holds all metadata for a specific command.
  */
-typedef struct
+typedef struct CmdInfo
 {
     char *name;   /* The string representation (e.g., "mov") */
     int opcode;   /* The machine opcode (e.g., 2 for ADD/SUB) */

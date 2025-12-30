@@ -30,7 +30,7 @@ SymbolTable *create_table()
 void add_symbol(SymbolTable *table, const char *name, int address, symbol_type type, boolean is_entry)
 {
     int count = table->count;
-    symbol *current = &table->symbols[count];
+    symbol *current;
     if (count == table->capacity)
     {
         int new_capacity = table->capacity + 1;
@@ -43,6 +43,7 @@ void add_symbol(SymbolTable *table, const char *name, int address, symbol_type t
         table->symbols = temp;
         table->capacity = new_capacity;
     }
+    current = &table->symbols[count];
     table->symbols[count].name = (char *)malloc(strlen(name) + 1);
     if (!(table->symbols[count].name))
     {
