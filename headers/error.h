@@ -1,6 +1,8 @@
 #ifndef ERRORS_H
 #define ERRORS_H
 
+#include "../headers/globals.h"
+
 typedef enum
 {
     ERR_NONE = 0,
@@ -43,6 +45,6 @@ typedef enum
     ERR_COUNT /* NEEDS TO BE IN THE END! */
 } ErrorCode;
 
-void log_error(ErrorCode code, int line_num, const char *filename, const char *info);
+boolean log_error(ErrorCode code, int line_num, char *filename, const char *info);
 
 #endif

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "../headers/error.h"
+#include "../headers/globals.h"
 
 #define COLOR_RED "\x1b[31m"
 #define COLOR_RESET "\x1b[0m"
@@ -18,7 +19,7 @@ static const char *error_messages[] = {
     "Line ends with a comma",
 
     /* Labels \ Symbols */
-    "Label name exceeds maximum length",
+    "Label name exceeds maximum length of 31 characters",
     "Label name contains invalid characters or format",
     "Label has already been defined",
     "Label name cannot be a reserved keyword",
@@ -42,16 +43,17 @@ static const char *error_messages[] = {
     "Fatal: Memory allocation failed",
     "Could not open file"};
 
-void log_error(ErrorCode code, int line_num, const char *filename, const char *info)
+boolean log_error(ErrorCode code, int line_num, char *filename, const char *info)
 {
     printf("%s", COLOR_RED);
     if (line_num > 0)
-        printf("{%s:%d} ", filename, line_num);
+        printf("{%s:%d} ", filename != NULL ? filename : "", line_num);
     if (code >= 0 && code < ERR_COUNT)
         printf("Error: %s", error_messages[code]);
     else
         printf("Error: Unknown error code");
     if (info != NULL)
-        printf(", \"%s\"", info);
+        printf(" (\"%s\")", info);
     printf(".%s\n", COLOR_RESET);
+    return FALSE;
 }
