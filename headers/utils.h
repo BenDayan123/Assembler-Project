@@ -4,11 +4,10 @@
 #include <stdio.h>
 #include "../headers/globals.h"
 
-char *convert_to_binary(unsigned int num, unsigned int binary_length);
 CmdInfo *find_cmd_info(char *cmd);
+addressing_mode get_arg_mode(char *arg);
 boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filename);
-char *filename_with_ext(char *filename, const char *ext);
-char *join_path_and_ext(char *filename, const char *ext, const char *path);
+char *create_file_path(const char *path, char *filename, const char *ext);
 char *skip_whitespaces(char *str);
 void *handle_malloc(size_t size);
 void get_first_word(const char *line, char *word);
