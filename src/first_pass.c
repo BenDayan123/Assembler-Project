@@ -30,9 +30,9 @@ int is_directive(const char *word)
     return word != NULL && word[0] != '\0' && word[0] == '.';
 }
 
-int calc_DC(char *args, const char *type)
+int calc_DC(char *args, const char *instruction)
 {
-    if (strcmp(type, "string") == 0)
+    if (strcmp(instruction, "string") == 0)
     {
         char *start, *end;
         if (*args == '\0')
@@ -49,7 +49,7 @@ int calc_DC(char *args, const char *type)
         log_error(ERR_INVALID_STRING, 0, NULL, ".string");
         return -1;
     }
-    if (strcmp(type, "data") == 0)
+    if (strcmp(instruction, "data") == 0)
         return count_and_validate_data_numbers(args);
     return -1;
 }
@@ -92,11 +92,12 @@ void update_data_symbols_address(SymbolTable *table, int final_IC)
 /* Main Logic                                */
 /* ========================================= */
 
-int run_first_pass(char *am_filename, SymbolTable *table)
+int run_first_pass(char *filename, SymbolTable *table)
 {
     int IC = IC_INIT_VALUE, DC = 0;
     char line[MAX_LINE_LEN], curr_word[MAX_LINE_LEN];
     int line_number = 0, L;
+    char *am_filename = create_file_path("output", filename, "am");
     FILE *file_in = fopen(am_filename, "r");
 
     if (file_in == NULL)
@@ -128,7 +129,7 @@ int run_first_pass(char *am_filename, SymbolTable *table)
         }
 
         /* Handle Label*/
-        if (strchr(first_word, ':'))
+        if (first_word[strlen(first_word) - 1] == ':')
         {
             get_next_word(&ptr, curr_word, FALSE);
             curr_word[strlen(curr_word) - 1] = '\0';
@@ -198,6 +199,7 @@ int run_first_pass(char *am_filename, SymbolTable *table)
     }
     update_data_symbols_address(table, IC);
     print_symbol_table(table);
+
     fclose(file_in);
     return TRUE;
 }
