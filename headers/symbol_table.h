@@ -29,6 +29,8 @@ SymbolTable *create_table();
 void add_symbol(SymbolTable *table, const char *name, int address, symbol_type type, boolean is_entry);
 symbol *find_symbol(SymbolTable *table, const char *name);
 void free_table(SymbolTable *table);
+void update_symbol(SymbolTable *table, const char *name, symbol_type type, boolean is_entry);
+boolean has_entries(SymbolTable *table);
 
 void print_symbol_table(SymbolTable *table);
 

@@ -68,6 +68,28 @@ symbol *find_symbol(SymbolTable *table, const char *name)
     return NULL;
 }
 
+void update_symbol(SymbolTable *table, const char *name, symbol_type type, boolean is_entry)
+{
+    symbol *sym = find_symbol(table, name);
+    if (sym == NULL)
+        return;
+    if (type >= 0)
+        sym->type = type;
+    if (is_entry >= 0)
+        sym->is_entry = is_entry;
+}
+
+boolean has_entries(SymbolTable *table)
+{
+    int i;
+    for (i = 0; i < table->count; i++)
+    {
+        if (table->symbols[i].is_entry)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 void free_table(SymbolTable *table)
 {
     int i;
@@ -79,6 +101,7 @@ void free_table(SymbolTable *table)
     free(table);
 }
 
+/* TODO: Remove it before sending the final version */
 /* For Debugging ONLY !! */
 const char *get_type_string(symbol_type type)
 {
