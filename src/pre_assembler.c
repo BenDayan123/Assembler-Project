@@ -44,8 +44,8 @@ boolean run_pre_assembler(char *filename)
     node *macro_list = create_node(NULL, NULL);
     node *curr_macro = macro_list;
 
-    as_filename = filename_with_ext(filename, "as");
-    am_filename = join_path_and_ext(filename, "am", "output");
+    as_filename = create_file_path(NULL, filename, "as");
+    am_filename = create_file_path("output", filename, "am");
 
     file_in = fopen(as_filename, "r");
     if (file_in == NULL)
