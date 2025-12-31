@@ -30,42 +30,6 @@ const CmdInfo operations[] = {
     {"stop", 15, 0, 0},
     {NULL, 0, 0, 0}};
 
-char *convert_to_binary(unsigned int num, unsigned int binary_length)
-{
-    unsigned int num_bits = 0; /* Count the number of bits */
-    char *binary = NULL;       /* Initialize binary pointer to NULL */
-    unsigned int temp = num;   /* Initialize temp to num */
-    int i = 0;
-
-    if (num == 0)
-        return "0";
-
-    if (binary_length > 0)
-        num_bits = binary_length;
-    else
-    {
-        /* Calculate the number of bits needed */
-        while (temp > 0)
-        {
-            temp >>= 1; /* Right shift to divide by 2 */
-            num_bits++;
-        }
-    }
-
-    binary = (char *)malloc((num_bits + 1) * sizeof(char)); /* +1 for null terminator */
-    if (binary == NULL)
-        return NULL;         /* Memory allocation failed */
-    binary[num_bits] = '\0'; /* Null terminate the string */
-
-    for (i = num_bits - 1; i >= 0; i--)
-    {
-        binary[i] = (num & 1) ? '1' : '0'; /* Check the least significant bit */
-        num >>= 1;                         /* Right shift to process the next bit */
-    }
-
-    return binary;
-}
-
 CmdInfo *find_cmd_info(char *cmd)
 {
     int i;
@@ -85,21 +49,16 @@ void *handle_malloc(size_t size)
     return ptr;
 }
 
-char *filename_with_ext(char *filename, const char *ext)
+char *create_file_path(const char *path, char *filename, const char *ext)
 {
-    char *new_filename = (char *)malloc(strlen(filename) + strlen(ext) + 2);
+    int path_len = path ? strlen(path) : 0;
+    char *new_filename = (char *)malloc(strlen(filename) + strlen(ext) + path_len + 3);
     if (new_filename == NULL)
         return NULL;
-    sprintf(new_filename, "%s.%s", filename, ext);
-    return new_filename;
-}
-
-char *join_path_and_ext(char *filename, const char *ext, const char *path)
-{
-    char *new_filename = (char *)malloc(strlen(filename) + strlen(ext) + strlen(path) + 3);
-    if (new_filename == NULL)
-        return NULL;
-    sprintf(new_filename, "%s/%s.%s", path, filename, ext);
+    if (path == NULL || *path == '\0')
+        sprintf(new_filename, "%s.%s", filename, ext);
+    else
+        sprintf(new_filename, "%s/%s.%s", path, filename, ext);
     return new_filename;
 }
 /*
@@ -252,4 +211,15 @@ boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filena
     if (found_ops < cmd->op_count)
         return log_error(ERR_MISSING_OPERAND, line, filename, cmd_name);
     return TRUE;
+}
+
+addressing_mode get_arg_mode(char *arg)
+{
+    if (*arg == '#')
+        return IMMEDIATE_ADDR;
+    if (*arg == '%')
+        return INDEX_ADDR;
+    if (is_register(arg))
+        return REGISTER_ADDR;
+    return DIRECT_ADDR;
 }
