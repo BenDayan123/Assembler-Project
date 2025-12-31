@@ -10,7 +10,7 @@
 /* ========================================= */
 
 /* Boolean logic for ANSI-C (C90) */
-typedef enum
+typedef enum boolean
 {
     FALSE = 0,
     TRUE = 1
@@ -77,7 +77,7 @@ typedef enum
 } reg;
 
 /* Addressing Modes for Operands */
-typedef enum
+typedef enum addressing_mode
 {
     IMMEDIATE_ADDR = 0, /* e.g., #5 */
     DIRECT_ADDR = 1,    /* e.g., LABEL */
