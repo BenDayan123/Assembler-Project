@@ -68,7 +68,7 @@ symbol *find_symbol(SymbolTable *table, const char *name)
     return NULL;
 }
 
-void update_symbol(SymbolTable *table, const char *name, symbol_type type, boolean is_entry)
+void update_symbol(SymbolTable *table, const char *name, int type, boolean is_entry)
 {
     symbol *sym = find_symbol(table, name);
     if (sym == NULL)
@@ -137,10 +137,11 @@ void print_symbol_table(SymbolTable *table)
     {
         symbol *s = &table->symbols[i];
 
-        printf("| %-15s | %03d       | %-10s |\n",
+        printf("| %-15s | %03d       | %-10s | %-10s \n",
                s->name,
                s->address,
-               get_type_string(s->type));
+               get_type_string(s->type),
+               s->is_entry ? "Entry" : "");
     }
 
     printf("==============================================\n");
