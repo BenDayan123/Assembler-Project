@@ -27,4 +27,4 @@ clean:
 	rm -rf $(wildcard $(BUILD_DIR)/*.o) $(TARGET)
 
 clean_output:
-	rm -rf $(wildcard $(OUT_DIR)/*.am)
+	rm -rf $(wildcard $(OUT_DIR)/*)

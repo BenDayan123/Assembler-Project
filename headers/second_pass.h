@@ -2,6 +2,6 @@
 #define SECONDPASS_H
 #include "../headers/symbol_table.h"
 
-int run_second_pass(char *am_filename, SymbolTable *table);
+int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF);
 
 #endif
