@@ -31,25 +31,14 @@ node *create_node(char *key, char *content)
 
 void add_node(node *head, node *new_node)
 {
-    node *current;
+    node *current = head;
 
     if (!head || !new_node)
         return;
 
-    current = head;
     while (current->next != NULL)
-    {
-        if (strcmp(new_node->key, current->key) == 0)
-        {
-            free_node(new_node);
-            return;
-        }
         current = current->next;
-    }
-    if (strcmp(new_node->key, current->key) == 0)
-        return;
-    else
-        current->next = new_node;
+    current->next = new_node;
 }
 
 node *search_node(node *head, char *key)
@@ -59,9 +48,7 @@ node *search_node(node *head, char *key)
     while (current != NULL)
     {
         if (strcmp(current->key, key) == 0)
-        {
             return current;
-        }
         current = current->next;
     }
     return NULL;
@@ -86,16 +73,5 @@ void free_nodes(node *head)
         temp = head;
         head = head->next;
         free_node(temp);
-    }
-}
-
-/* TODO: Remove it after debugging */
-void print_list(node *head)
-{
-    node *current = head;
-    while (current != NULL)
-    {
-        printf("'%s'\n----------------------------\n%s\n", current->key, current->content);
-        current = current->next;
     }
 }
