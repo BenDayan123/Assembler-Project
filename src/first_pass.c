@@ -11,17 +11,22 @@ boolean is_valid_label(char *label)
 {
     char *temp = label;
     int i = 0;
-    if (strlen(label) > MAX_LABEL_LEN)
-        return log_error(ERR_LABEL_TOO_LONG, 0, NULL, label);
 
     if (temp == NULL || *temp == '\0' || !isalpha(temp[0]))
         return log_error(ERR_INVALID_LABEL_NAME, 0, NULL, label);
+
+    if (strlen(label) > MAX_LABEL_LEN)
+        return log_error(ERR_LABEL_TOO_LONG, 0, NULL, label);
+
+    if (is_register(label) || find_cmd_info(label) != NULL)
+        return log_error(ERR_LABEL_IS_KEYWORD, 0, NULL, label);
+
     while (temp[i] != '\0' && i < MAX_LINE_LEN)
     {
         if (!isalnum(temp[i++]))
             return log_error(ERR_INVALID_LABEL_NAME, 0, NULL, label);
     }
-    /* TODO: Checked if it's not a register, command or instruction */
+    /* TODO: Check if the label is not a register, command or instruction */
     return TRUE;
 }
 
@@ -59,32 +64,18 @@ int calc_IC(char *op_name, char *args)
     CmdInfo *inst = find_cmd_info(op_name);
     if (inst == NULL)
         return -1;
-    /*
-
-    char *ptr = args;
-    char arg1[MAX_LINE_LEN] = {0}, arg2[MAX_LINE_LEN] = {0};
-    int found_ops = 0;
-
-
-
-    get_next_word(&ptr, arg1, inst->op_count > 0);
-    get_next_word(&ptr, arg2, inst->op_count > 1);
-
-    found_ops += (arg1[0] != '\0') ? 1 : 0;
-    found_ops += (arg2[0] != '\0') ? 1 : 0;
-    */
 
     return 1 + inst->op_count;
 }
 
-void update_data_symbols_address(SymbolTable *table, int final_IC)
+void update_data_symbols_address(SymbolTable *table, int ICF)
 {
     int i;
     for (i = 0; i < table->count; i++)
     {
         symbol *sym = &table->symbols[i];
         if (sym->type == SYMBOL_DATA)
-            sym->address += final_IC;
+            sym->address += ICF;
     }
 }
 
@@ -92,7 +83,7 @@ void update_data_symbols_address(SymbolTable *table, int final_IC)
 /* Main Logic                                */
 /* ========================================= */
 
-int run_first_pass(char *filename, SymbolTable *table)
+int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
 {
     int IC = IC_INIT_VALUE, DC = 0;
     char line[MAX_LINE_LEN], curr_word[MAX_LINE_LEN];
@@ -198,8 +189,8 @@ int run_first_pass(char *filename, SymbolTable *table)
         }
     }
     update_data_symbols_address(table, IC);
-    print_symbol_table(table);
-
+    *ICF = IC;
+    *DCF = DC;
     fclose(file_in);
     return TRUE;
 }
