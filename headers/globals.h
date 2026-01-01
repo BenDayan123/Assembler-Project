@@ -63,19 +63,6 @@ typedef struct CmdInfo
     int op_count; /* How many operands are required (0, 1, or 2) */
 } CmdInfo;
 
-/* CPU Registers */
-typedef enum
-{
-    R0 = 0,
-    R1,
-    R2,
-    R3,
-    R4,
-    R5,
-    R6,
-    R7
-} reg;
-
 /* Addressing Modes for Operands */
 typedef enum addressing_mode
 {
