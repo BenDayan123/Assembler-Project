@@ -68,7 +68,8 @@ boolean run_pre_assembler(char *filename)
             node *new_macro;
             sscanf(ptr, "%*s %s", macro_name);
             new_macro = create_node(macro_name, NULL);
-            add_node(macro_list, new_macro);
+            if (search_node(macro_list, macro_name) == NULL)
+                add_node(macro_list, new_macro);
             curr_macro = new_macro;
             inside_mcro = TRUE;
         }
