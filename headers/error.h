@@ -46,6 +46,7 @@ typedef enum
 } ErrorCode;
 
 boolean log_error(ErrorCode code, int line_num, char *filename, const char *info);
+boolean log_custom_error(const char *msg);
 
 extern boolean was_error_found;
 

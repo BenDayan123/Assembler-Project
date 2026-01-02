@@ -275,14 +275,16 @@ boolean encode_instruction(char *line, SymbolTable *table, int *IC, int line_num
 
     /* Encode additional words for the operands */
     if (cmd->op_count == 2)
-    {
-        /* Encode both source and destination operands */
+        /* Encode source operand */
         encode_operand(arg1, table, src_mode, IC, line_num);
-        encode_operand(arg2, table, dest_mode, IC, line_num);
-    }
+
     /* Encode only the destination operand */
     else if (cmd->op_count == 1)
-        encode_operand(arg1, table, dest_mode, IC, line_num);
+    {
+        /* In the case of 2 operands, the destination is the second. In the case of 1, it is the first */
+        char *dest_arg = (cmd->op_count == 2) ? arg2 : arg1;
+        encode_operand(dest_arg, table, dest_mode, IC, line_num);
+    }
     return TRUE;
 }
 

@@ -87,3 +87,16 @@ boolean log_error(ErrorCode code, int line_num, char *filename, const char *info
     printf(".%s\n", COLOR_RESET);
     return FALSE; /* Return FALSE to indicate failure */
 }
+
+/**
+ * Function: log_custom_error
+ * Description: Logs a custom, user-defined error message to the standard output.
+ * @param msg - The custom error description string to print.
+ * @return FALSE (always), to allow usage like: return log_custom_error("...");
+ */
+boolean log_custom_error(const char *msg)
+{
+    was_error_found = TRUE;
+    printf("%sError: '%s'%s\n", COLOR_RED, msg, COLOR_RESET);
+    return FALSE;
+}

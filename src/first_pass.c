@@ -108,7 +108,7 @@ int calc_DC(char *args, const char *instruction)
 int calc_IC(char *op_name, char *args)
 {
     /* Look up the instruction in the operations table */
-    CmdInfo *inst = find_cmd_info(op_name);
+    const CmdInfo *inst = find_cmd_info(op_name);
 
     if (inst == NULL)
         return -1;
@@ -135,6 +135,75 @@ void update_data_symbols_address(SymbolTable *table, int ICF)
         if (sym->type == SYMBOL_DATA)
             sym->address += ICF;
     }
+}
+
+/**
+ * Function: handle_directive
+ * Description: Processes assembler directives (.data, .string, .extern, .entry).
+ * It parses the arguments, validates syntax, updates the Data Counter (DC),
+ * and adds symbols to the symbol table when necessary.
+ *
+ * @param ptr        - Pointer to the string arguments (after the directive name).
+ * @param type       - The directive type string (e.g., ".data", ".string").
+ * @param table      - Pointer to the symbol table.
+ * @param DC         - Pointer to the Data Counter (will be incremented for data).
+ * @param is_label   - Flag indicating if a label was defined at the start of the line.
+ * @param label_name - The name of the label (used only if is_label is TRUE).
+ * @param line_num   - The current line number (for error reporting).
+ * @param fname      - The source file name (for error reporting).
+ *
+ * @return TRUE if the line was identified and handled as a directive, FALSE otherwise.
+ */
+boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boolean is_label, char *label_name, int line_num, char *fname)
+{
+    /* Skip the leading '.' from the directive name */
+    char *directive_name = type + 1;
+    /* Handle .data and .string directives */
+    if (strcmp(directive_name, "data") == 0 || strcmp(directive_name, "string") == 0)
+    {
+        int size;
+        /* If a label was found, add it to the symbol table as a data symbol */
+        if (is_label)
+        {
+            /* Add data label to table with current DC */
+            if (find_symbol(table, label_name) == NULL)
+                add_symbol(table, label_name, *DC, SYMBOL_DATA, FALSE);
+            else
+                return log_error(ERR_SYMBOL_ALREADY_DEFINED, line_num, fname, label_name);
+        }
+        /* Calculate how many words this data takes and increment DC */
+        size = calc_DC(ptr, directive_name);
+        DC += size > 0 ? size : 0;
+        return TRUE;
+    }
+    /* Handle .extern directive */
+    else if (strcmp(directive_name, "extern") == 0)
+    {
+        /* TODO: Merge the logic of .extern and .entry */
+        char extern_name[MAX_LINE_LEN];
+        /* Extract the external symbol name */
+        get_next_word(&ptr, extern_name, FALSE);
+        if (extern_name[0] == '\0')
+            return log_error(ERR_MISSING_OPERAND, line_num, fname, ".extern requires a label");
+        else
+            add_symbol(table, extern_name, 0, SYMBOL_EXTERN, FALSE);
+        return TRUE;
+    }
+    /* Handle .entry directive */
+    else if (strcmp(directive_name, "entry") == 0)
+    {
+        /* Check syntax only (entry is handled in 2nd pass) */
+        char curr_arg[MAX_LINE_LEN];
+        get_next_word(&ptr, curr_arg, FALSE);
+        if (curr_arg[0] == '\0')
+            return log_error(ERR_MISSING_OPERAND, line_num, fname, ".entry requires a label");
+        /* Check for extraneous text after the entry label */
+        get_next_word(&ptr, curr_arg, FALSE);
+        if (curr_arg[0] != '\0')
+            return log_error(ERR_EXTRA_TEXT_AFTER_CMD, line_num, fname, curr_arg);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /* ========================================= */
@@ -168,7 +237,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
     while (fgets(line, MAX_LINE_LEN, file_in))
     {
         boolean is_label_found = FALSE;
-        char symbol_name[MAX_LABEL_LEN] = {0}, first_word[MAX_LINE_LEN] = {0};
+        char label_name[MAX_LABEL_LEN] = {0}, first_word[MAX_LINE_LEN] = {0};
         char *ptr = line;
         line_number++;
         first_word[0] = '\0';
@@ -203,7 +272,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
             if (is_valid_label(curr_word))
             {
                 is_label_found = TRUE;
-                strcpy(symbol_name, curr_word);
+                strcpy(label_name, curr_word);
             }
             else
                 continue; /* Skip this line if label is invalid */
@@ -214,52 +283,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
 
         /* --- Step 2: Directive Handling (.data, .string, .extern, .entry) --- */
         if (is_directive(curr_word))
-        {
-            /* Remove the leading '.' from the directive name */
-            memmove(curr_word, curr_word + 1, strlen(curr_word));
-            /* Handle .data and .string directives */
-            if (strcmp(curr_word, "data") == 0 || strcmp(curr_word, "string") == 0)
-            {
-                int size;
-                /* If a label was found, add it to the symbol table as a data symbol */
-                if (is_label_found)
-                {
-                    /* Add data label to table with current DC */
-                    if (find_symbol(table, symbol_name) == NULL)
-                        add_symbol(table, symbol_name, DC, SYMBOL_DATA, FALSE);
-                    else
-                        log_error(ERR_SYMBOL_ALREADY_DEFINED, line_number, am_filename, symbol_name);
-                }
-                /* Calculate how many words this data takes and increment DC */
-                size = calc_DC(ptr, curr_word);
-                DC += size > 0 ? size : 0;
-            }
-            /* Handle .extern directive */
-            else if (strcmp(curr_word, "extern") == 0)
-            {
-                /* TODO: Merge the logic of .extern and .entry */
-                char extern_name[MAX_LINE_LEN];
-                /* Extract the external symbol name */
-                get_next_word(&ptr, extern_name, FALSE);
-                if (extern_name[0] == '\0')
-                    log_error(ERR_MISSING_OPERAND, line_number, am_filename, ".extern requires a label");
-                else
-                    add_symbol(table, extern_name, 0, SYMBOL_EXTERN, FALSE);
-            }
-            /* Handle .entry directive */
-            else if (strcmp(curr_word, "entry") == 0)
-            {
-                /* Check syntax only (entry is handled in 2nd pass) */
-                char curr_arg[MAX_LINE_LEN];
-                get_next_word(&ptr, curr_arg, FALSE);
-                if (curr_arg[0] == '\0')
-                    log_error(ERR_MISSING_OPERAND, line_number, am_filename, ".entry requires a label");
-                /* Check for extraneous text after the entry label */
-                get_next_word(&ptr, curr_arg, FALSE);
-                if (curr_arg[0] != '\0')
-                    log_error(ERR_EXTRA_TEXT_AFTER_CMD, line_number, am_filename, curr_arg);
-            }
-        }
+            handle_directive(ptr, curr_word, table, &DC, is_label_found, label_name, line_number, am_filename);
 
         /* --- Step 3: Instruction Handling (Code) --- */
         else if (is_vaild_command_line(curr_word, ptr, line_number, am_filename))
@@ -268,10 +292,10 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
             if (is_label_found)
             {
                 /* Check if the symbol already exists */
-                if (!find_symbol(table, symbol_name))
-                    add_symbol(table, symbol_name, IC, SYMBOL_CODE, FALSE);
+                if (!find_symbol(table, label_name))
+                    add_symbol(table, label_name, IC, SYMBOL_CODE, FALSE);
                 else
-                    log_error(ERR_SYMBOL_ALREADY_DEFINED, line_number, am_filename, symbol_name);
+                    log_error(ERR_SYMBOL_ALREADY_DEFINED, line_number, am_filename, label_name);
             }
             /* Calculate the instruction length and increment IC */
             L = calc_IC(curr_word, ptr);
