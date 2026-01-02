@@ -4,6 +4,8 @@
 ![Standard](https://img.shields.io/badge/std-C90-green.svg)
 
 A comprehensive Assembler written in **C (ANSI C90 standard)**.
+
+This project was coded as part of the "20465 - Systems Programming Laboratory" 2025A course at the Open University Israel. <br>
 This program translates assembly language source code into machine code for a hypothetical 12-bit CPU architecture. It handles macro expansion, symbol resolution, and binary encoding through a multi-stage process.
 
 ## 🏗️ Architecture & Workflow
@@ -70,6 +72,7 @@ If you have a file named `test.as`:
 1. **And Run**: `./main test`
 2. So the program will generate:
 
+- `output/test.am`
 - `output/test.ob`
 - `output/test.ent` (if entries exist)
 - `output/test.ext` (if externals exist)

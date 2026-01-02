@@ -173,7 +173,7 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
         }
         /* Calculate how many words this data takes and increment DC */
         size = calc_DC(ptr, directive_name);
-        DC += size > 0 ? size : 0;
+        *DC += size > 0 ? size : 0;
         return TRUE;
     }
     /* Handle .extern directive */
