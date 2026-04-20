@@ -213,7 +213,7 @@ int count_and_validate_data_numbers(char *line)
         if (!expecting_comma)
         {
             char *endptr;
-            strtol(ptr, &endptr, 10);
+            long val = strtol(ptr, &endptr, 10);
 
             /* Check for comma at start (syntax error) */
             if (*ptr == ',')
@@ -233,6 +233,14 @@ int count_and_validate_data_numbers(char *line)
                 log_error(ERR_INVALID_NUMBER, 0, NULL, "Float or invalid characters");
                 return -1;
             }
+
+            /* checks if the number value is exceeded 12 bit */
+            if (val < -2048 || val > 2047)
+            {
+                log_error(ERR_DATA_OUT_OF_RANGE, 0, NULL, ptr);
+                return -1;
+            }
+
             /* Valid number found */
             count++;
             ptr = endptr;
@@ -281,48 +289,52 @@ int is_register(const char *op)
 }
 
 /**
- * Function: is_vaild_command_line
- * Description: Validates the operand count and comma placement for an instruction line.
- * @param cmd_name - The name of the command
- * @param args - The arguments string to validate
- * @param line - The line number for error reporting
- * @param filename - The filename for error reporting
- * @return TRUE if the command line is valid, FALSE otherwise
+ * Function: is_valid_addressing
+ * Description: Checks if the addressing modes of the operands are legal for the given command.
+ * The validation is based on the allowed addressing modes table from the project requirements.
+ * @param opcode - The numeric code of the instruction (e.g., mov=0, lea=4).
+ * @param op_count - How many operands the command expects (0, 1, or 2).
+ * @param src - The addressing mode found for the source operand.
+ * @param dest - The addressing mode found for the destination operand.
+ * @return TRUE if the addressing modes are allowed for this opcode, otherwise FALSE
  */
-boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filename)
+boolean is_valid_addressing(int opcode, int op_count, addressing_mode src, addressing_mode dest)
 {
-    char *ptr = args;
-    char curr_arg[MAX_LINE_LEN] = {0};
-    int found_ops = 0, i;
-
-    /* Look up the command information */
-    const CmdInfo *cmd = find_cmd_info(cmd_name);
-
-    /* Check if the command exists in the operations table */
-    if (cmd == NULL)
-        return log_error(ERR_UNKNOWN_INSTRUCTION, line, filename, cmd_name);
-
-    /* Extract and count the operands */
-    for (i = 0; i < cmd->op_count; i++)
+    /* Check source operand (only relevant for commands that take 2 operands) */
+    if (op_count == 2)
     {
-        curr_arg[0] = '\0';
+        /* 'lea' command must use direct addressing for source */
+        if (opcode == 4 && src != DIRECT_ADDR)
+            return FALSE;
 
-        /* Parse the next argument, expecting comma for all but the last operand */
-        get_next_word(&ptr, curr_arg, i < cmd->op_count - 1);
-
-        /* Count non-empty arguments */
-        found_ops += (curr_arg[0] != '\0') ? 1 : 0;
+        /* 'mov', 'cmp', 'add', 'sub' cannot use index addressing for source */
+        if ((opcode == 0 || opcode == 1 || opcode == 2) && src == INDEX_ADDR)
+            return FALSE;
     }
 
-    /* Check for extraneous text after all expected operands */
-    ptr = skip_whitespaces(ptr);
-    if (*ptr != '\0')
-        return log_error(ERR_TOO_MANY_OPERANDS, line, filename, cmd_name);
-
-    /* Check if we found fewer operands than required */
-    if (found_ops < cmd->op_count)
-        return log_error(ERR_MISSING_OPERAND, line, filename, cmd_name);
-
+    /* Check destination operand (relevant for commands that take 1 or 2 operands) */
+    if (op_count >= 1)
+    {
+        if (opcode == 9)
+        {
+            /* 'jmp', 'bne', 'jsr' can only use direct (1) or index (2) addressing */
+            if (dest != DIRECT_ADDR && dest != INDEX_ADDR)
+                return FALSE;
+        }
+        else if (opcode == 1 || opcode == 13)
+        {
+            /* 'cmp', 'prn' can use anything EXCEPT index addressing (2) */
+            if (dest == INDEX_ADDR)
+                return FALSE;
+        }
+        else
+        {
+            /* All other commands (mov, add, sub, lea, clr, not, inc, dec, red) can only use direct (1) or register (3) addressing */
+            if (dest != DIRECT_ADDR && dest != REGISTER_ADDR)
+                return FALSE;
+        }
+    }
+    /* All checks passed, the addressing modes are valid */
     return TRUE;
 }
 
@@ -348,4 +360,77 @@ addressing_mode get_arg_mode(char *arg)
 
     /* Default to direct addressing (label name) */
     return DIRECT_ADDR;
+}
+
+/**
+ * Function: is_vaild_command_line
+ * Description: Validates the operand count and comma placement for an instruction line.
+ * @param cmd_name - The name of the command
+ * @param args - The arguments string to validate
+ * @param line - The line number for error reporting
+ * @param filename - The filename for error reporting
+ * @return TRUE if the command line is valid, FALSE otherwise
+ */
+boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filename)
+{
+    char *ptr = args;
+    char curr_arg[MAX_LINE_LEN] = {0};
+    int found_ops = 0, i;
+    char arg1[MAX_LINE_LEN] = {0}; /* saving the first operand */
+    char arg2[MAX_LINE_LEN] = {0}; /* saving the second operand */
+
+    /* Look up the command information */
+    const CmdInfo *cmd = find_cmd_info(cmd_name);
+
+    /* Check if the command exists in the operations table */
+    if (cmd == NULL)
+        return log_error(ERR_UNKNOWN_INSTRUCTION, line, filename, cmd_name);
+
+    /* Extract and count the operands */
+    for (i = 0; i < cmd->op_count; i++)
+    {
+        curr_arg[0] = '\0';
+
+        /* Parse the next argument, expecting comma for all but the last operand */
+        get_next_word(&ptr, curr_arg, i < cmd->op_count - 1);
+
+        if (i == 0)
+            strcpy(arg1, curr_arg);
+        if (i == 1)
+            strcpy(arg2, curr_arg);
+        /* Count non-empty arguments */
+        found_ops += (curr_arg[0] != '\0') ? 1 : 0;
+    }
+
+    /* Check for extraneous text after all expected operands */
+    ptr = skip_whitespaces(ptr);
+    if (*ptr != '\0')
+        return log_error(ERR_TOO_MANY_OPERANDS, line, filename, cmd_name);
+
+    /* Check if we found fewer operands than required */
+    if (found_ops < cmd->op_count)
+        return log_error(ERR_MISSING_OPERAND, line, filename, cmd_name);
+
+    /* Case 1: Command has exactly 2 operands */
+    if (cmd->op_count == 2)
+    {
+        /* Get the addressing mode of each operand */
+        addressing_mode src_mode = get_arg_mode(arg1);
+        addressing_mode dest_mode = get_arg_mode(arg2);
+
+        /* Check against the rules table */
+        if (!is_valid_addressing(cmd->opcode, cmd->op_count, src_mode, dest_mode))
+            return log_error(ERR_INVALID_OPERAND_TYPE, line, filename, cmd_name);
+    }
+    /* Case 2: Command has exactly 1 operand */
+    else if (cmd->op_count == 1)
+    {
+        /* Get the addressing mode of the destination operand */
+        addressing_mode dest_mode = get_arg_mode(arg1);
+        /* Pass 0 for source because it doesn't matter for 1-operand commands */
+        if (!is_valid_addressing(cmd->opcode, cmd->op_count, 0, dest_mode))
+            return log_error(ERR_INVALID_OPERAND_TYPE, line, filename, cmd_name);
+    }
+
+    return TRUE;
 }
