@@ -18,6 +18,7 @@ TARGET = main
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
+	mkdir -p $(OUT_DIR)
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c

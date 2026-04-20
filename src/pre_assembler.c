@@ -80,7 +80,7 @@ boolean run_pre_assembler(char *filename)
     char *am_filename, *as_filename;
     char line[MAX_LINE_LEN], first_word[MAX_LINE_LEN];
     boolean inside_mcro = FALSE;                /* Flag to track if we are inside a macro block */
-    node *macro_list = create_node(NULL, NULL); /* Head of the linked list for macros */
+    node *macro_list = create_node(NULL, NULL); /* Head of the linked list for macros, start with dummy head */
     node *curr_macro = macro_list;
 
     /* Create file paths with extensions */
@@ -185,9 +185,6 @@ boolean run_pre_assembler(char *filename)
                 fputs(ptr, file_out);
         }
     }
-    /* Skip dummy head */
-    macro_list = macro_list->next;
-
     /* Cleanup: free all allocated memory and close files */
     free_nodes(macro_list);
     fclose(file_in);

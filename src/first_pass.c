@@ -33,8 +33,10 @@ boolean is_valid_label(char *label)
     if (strlen(label) > MAX_LABEL_LEN)
         return log_error(ERR_LABEL_TOO_LONG, 0, NULL, label);
 
-    /* Check if label is a reserved keyword (register or command name) */
-    if (is_register(label) || find_cmd_info(label) != NULL)
+    /* Check if label is a reserved keyword (register or command, directive or macro keyword) */
+    if (is_register(label) || find_cmd_info(label) != NULL || strcmp(label, "data") == 0 || strcmp(label, "string") == 0 ||
+        strcmp(label, "entry") == 0 || strcmp(label, "extern") == 0 ||
+        strcmp(label, "mcro") == 0 || strcmp(label, "mcroend") == 0)
         return log_error(ERR_LABEL_IS_KEYWORD, 0, NULL, label);
 
     /* Verify that all characters are alphanumeric */
@@ -260,9 +262,13 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
         curr_word[0] = '\0';
 
         /* Check for lines that exceed the maximum allowed length */
-        if (strlen(line) > MAX_LINE_LEN)
+        if (strchr(line, '\n') == NULL && !feof(file_in))
         {
+            int c;
             log_error(ERR_LINE_TOO_LONG, line_number, am_filename, NULL);
+            /* Flush the remaining characters of the long line from the buffer */
+            while ((c = fgetc(file_in)) != '\n' && c != EOF)
+                ;
             continue;
         }
 
@@ -278,7 +284,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
 
         /* --- Step 1: Label Identification --- */
         /* Check if the first word is a label (ends with ':') */
-        if (first_word[strlen(first_word) - 1] == ':')
+        if (strlen(first_word) > 0 && first_word[strlen(first_word) - 1] == ':')
         {
             /* Extract the label name without the colon */
             get_next_word(&ptr, curr_word, FALSE);
