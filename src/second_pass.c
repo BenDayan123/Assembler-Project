@@ -138,7 +138,7 @@ void encode_operand(char *arg, SymbolTable *table, addressing_mode mode, int *IC
         int val = atoi(arg + 1);
         /* Check if the number value exceeds 12-bit representation */
         if (val < -2048 || val > 2047)
-            log_error(ERR_DATA_OUT_OF_RANGE, line_number, NULL, arg);
+            log_error(ERR_DATA_OUT_OF_RANGE, line_number, NULL, NULL);
 
         /* Store the immediate value in the code image */
         code_image[*IC].code = val;
@@ -458,6 +458,12 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
                 /* Extract the label name */
                 get_next_word(&ptr, label, FALSE);
 
+                if (strlen(label) == 0)
+                {
+                    log_error(ERR_MISSING_OPERAND, line_number, am_filename, ".entry");
+                    continue;
+                }
+
                 sym = find_symbol(table, label);
                 /* Verify that the label exists in the symbol table */
                 if (sym == NULL)
@@ -466,6 +472,8 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
                     continue;
                 }
 
+                if (sym->is_entry)
+                    continue;
                 /* checks for collision with .extren */
                 if (sym->type == SYMBOL_EXTERN)
                 {
