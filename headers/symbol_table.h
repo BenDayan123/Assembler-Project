@@ -32,6 +32,4 @@ void free_table(SymbolTable *table);
 void update_symbol(SymbolTable *table, const char *name, int type, boolean is_entry);
 boolean has_entries(SymbolTable *table);
 
-void print_symbol_table(SymbolTable *table);
-
 #endif
