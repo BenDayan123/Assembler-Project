@@ -34,9 +34,7 @@ boolean is_valid_label(char *label)
         return log_error(ERR_LABEL_TOO_LONG, 0, NULL, label);
 
     /* Check if label is a reserved keyword (register or command, directive or macro keyword) */
-    if (is_register(label) || find_cmd_info(label) != NULL || strcmp(label, "data") == 0 || strcmp(label, "string") == 0 ||
-        strcmp(label, "entry") == 0 || strcmp(label, "extern") == 0 ||
-        strcmp(label, "mcro") == 0 || strcmp(label, "mcroend") == 0)
+    if (is_reserved_word(label))
         return log_error(ERR_LABEL_IS_KEYWORD, 0, NULL, label);
 
     /* Verify that all characters are alphanumeric */
@@ -333,6 +331,17 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
             /* Calculate the instruction length and increment IC */
             L = calc_IC(curr_word, ptr);
             IC += L > 0 ? L : 0;
+
+            /* Check if we exceeded the 4096 memory limit */
+            if (IC + DC >= MEMORY_SIZE)
+            {
+                char msg[MAX_LINE_LEN] = {0};
+                sprintf(msg, "Fatal Error: Memory limit exceeded (%d words).", MEMORY_SIZE);
+                log_custom_error(msg);
+                fclose(file_in);
+                free(am_filename);
+                return FALSE;
+            }
         }
     }
     /* After processing all lines, adjust data symbol addresses */

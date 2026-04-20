@@ -112,14 +112,31 @@ boolean run_pre_assembler(char *filename)
 
         /* Case 1: End of macro definition */
         if (strcmp(first_word, "mcroend") == 0)
+        {
+            char extra[MAX_LINE_LEN] = {0};
+            sscanf(ptr, "%*s %s", extra);
+            if (extra[0] != '\0')
+            {
+                log_error(ERR_EXTRA_TEXT_AFTER_CMD, 0, as_filename, extra);
+                continue;
+            }
             inside_mcro = FALSE;
+        }
 
         /* Case 2: Start of macro definition */
         else if (strcmp(first_word, "mcro") == 0)
         {
-            char macro_name[MAX_LABEL_LEN] = {0};
+            char macro_name[MAX_LABEL_LEN] = {0}, extra[MAX_LINE_LEN] = {0};
             node *new_macro;
-            sscanf(ptr, "%*s %s", macro_name); /* Skip 'mcro' and get name */
+
+            /* Skip 'mcro', get name, and check for extra text */
+            sscanf(ptr, "%*s %s %s", macro_name, extra);
+
+            if (extra[0] != '\0')
+            {
+                log_error(ERR_EXTRA_TEXT_AFTER_CMD, 0, as_filename, extra);
+                continue;
+            }
 
             /* Ensure a macro name was actually provided */
             if (macro_name[0] == '\0')
@@ -130,8 +147,8 @@ boolean run_pre_assembler(char *filename)
             /* Create new node and add to list */
             new_macro = create_node(macro_name, NULL);
 
-            /* checking if the macro is vaild - not a register or a command */
-            if (is_register(macro_name) || find_cmd_info(macro_name) != NULL)
+            /* checking if the macro is valid - not a reserved keyword */
+            if (is_reserved_word(macro_name))
             {
                 log_error(ERR_LABEL_IS_KEYWORD, 0, as_filename, macro_name);
                 free_node(new_macro);
