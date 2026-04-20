@@ -176,7 +176,7 @@ boolean run_pre_assembler(char *filename)
             {
                 /* If a label is present before the macro, print the label first on a new line */
                 if (is_label)
-                    fprintf(file_out, "%s\n", first_word);
+                    fprintf(file_out, "%s ", first_word);
                 /* Print the expanded macro content */
                 fputs(found_macro->content, file_out);
             }
