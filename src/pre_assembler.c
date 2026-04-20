@@ -82,10 +82,21 @@ boolean run_pre_assembler(char *filename)
     boolean inside_mcro = FALSE;                /* Flag to track if we are inside a macro block */
     node *macro_list = create_node(NULL, NULL); /* Head of the linked list for macros, start with dummy head */
     node *curr_macro = macro_list;
+    int line_number = 0;
 
     /* Create file paths with extensions */
     as_filename = create_file_path(NULL, filename, "as");
     am_filename = create_file_path("output", filename, "am");
+
+    /* Check if file paths were created successfully */
+    if (!as_filename || !am_filename)
+    {
+        if (as_filename)
+            free(as_filename);
+        if (am_filename)
+            free(am_filename);
+        return log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, "Failed file path creation");
+    }
 
     /* Open the input file for reading */
     file_in = fopen(as_filename, "r");
@@ -102,6 +113,18 @@ boolean run_pre_assembler(char *filename)
     {
         char *ptr = skip_whitespaces(line);
         first_word[0] = '\0';
+        line_number++;
+
+        /* Check for line length exceeding the limit (no newline found) */
+        if (strchr(line, '\n') == NULL && !feof(file_in))
+        {
+            int c;
+            log_error(ERR_LINE_TOO_LONG, line_number, as_filename, NULL);
+            /* Flush the remaining characters */
+            while ((c = fgetc(file_in)) != '\n' && c != EOF)
+                ;
+            continue;
+        }
 
         /* Skip empty lines or comment lines (starting with ';') */
         if (ptr == NULL || ptr[0] == '\0' || ptr[0] == ';')
@@ -173,6 +196,7 @@ boolean run_pre_assembler(char *filename)
         /* Case 3: Inside a macro definition - save the line */
         else if (inside_mcro)
             add_macro_line(curr_macro, ptr);
+
         /* Case 4: Normal line or macro usage */
         else
         {
