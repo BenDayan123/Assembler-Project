@@ -321,10 +321,7 @@ void write_object_file(char *filename, int ICF, int DCF)
 
     /* Write the data section (data is placed after code in memory) */
     for (i = 0; i < DCF; i++)
-    {
-        /* Data always has 'A' (Absolute) flag */
-        fprintf(obj_file, "%04d %03X A\n", ICF + i, data_image[i].code & 0xFFF);
-    }
+        fprintf(obj_file, "%04d %03X A\n", ICF + i, data_image[i].code & 0xFFF); /* Data always has 'A' (Absolute) flag */
 
     /* Cleanup */
     fclose(obj_file);
@@ -449,11 +446,22 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
             if (strcmp(curr_word, ".entry") == 0)
             {
                 char label[MAX_LABEL_LEN];
+                symbol *sym;
+
                 /* Extract the label name */
                 get_next_word(&ptr, label, FALSE);
+
+                sym = find_symbol(table, label);
                 /* Verify that the label exists in the symbol table */
-                if (find_symbol(table, label) == NULL)
-                    return log_error(ERR_UNDEFINED_LABEL, line_number, am_filename, label);
+                if (sym == NULL)
+                {
+                    log_error(ERR_UNDEFINED_LABEL, line_number, am_filename, label);
+                    continue;
+                }
+
+                /* checks for collision with .extren */
+                if (sym->type == SYMBOL_EXTERN)
+                    return log_error(ERR_INVALID_OPERAND_TYPE, line_number, am_filename, "Label cannot be both entry and extern");
                 /* Mark the symbol as an entry point */
                 update_symbol(table, label, -1, TRUE);
             }
@@ -468,16 +476,17 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
     }
 
     /* Generate all output files */
-    write_object_file(filename, ICF, DCF);
-    write_entries_file(filename, table);
-    write_externals_file(filename, table);
-
-    /* Print the final symbol table for debugging */
-    /*print_symbol_table(table);*/
+    if (!was_error_found)
+    {
+        write_object_file(filename, ICF, DCF);
+        write_entries_file(filename, table);
+        write_externals_file(filename, table);
+    }
 
     /* Clean up */
     fclose(am_file);
     free_nodes(ext_list);
     ext_list = NULL;
+
     return TRUE;
 }
