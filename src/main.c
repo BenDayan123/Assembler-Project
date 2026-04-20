@@ -78,12 +78,13 @@ void process_file(char *filename)
  */
 int main(int argc, char *argv[])
 {
+    int i;
     /* Process each file provided as a command-line argument */
-    /* Loop backwards through argv (skipping argv[0] which is the program name) */
-    while (--argc > 0)
+    /* Loop through argv (skipping argv[0] which is the program name) */
+    for (i = 1; i < argc; i++)
     {
         /* Call the main processing function for each file */
-        process_file(argv[argc]);
+        process_file(argv[i]);
     }
     /* Exit with success code */
     return 0;
