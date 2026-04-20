@@ -14,5 +14,4 @@ node *search_node(node *head, char *key);
 void free_node(node *n);
 void free_nodes(node *head);
 
-void print_list(node *head);
 #endif
