@@ -194,7 +194,7 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
     /* Handle .extern directive */
     else if (strcmp(directive_name, "extern") == 0)
     {
-        char extern_name[MAX_LABEL_LEN];
+        char extern_name[MAX_LABEL_LEN] = {0};
         /* Extract the external symbol name */
         get_next_word(&ptr, extern_name, FALSE);
         if (extern_name[0] == '\0')
@@ -226,7 +226,7 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
     else if (strcmp(directive_name, "entry") == 0)
     {
         /* Check syntax only (entry is handled in 2nd pass) */
-        char curr_arg[MAX_LINE_LEN];
+        char curr_arg[MAX_LINE_LEN] = {0};
         get_next_word(&ptr, curr_arg, FALSE);
 
         if (curr_arg[0] == '\0')
