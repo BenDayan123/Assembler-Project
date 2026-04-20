@@ -434,3 +434,22 @@ boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filena
 
     return TRUE;
 }
+
+/**
+ * Function: is_reserved_word
+ * Description: Checks if a given string is a reserved keyword in the assembly language
+ * (e.g., a register, a command name, or a directive/macro keyword).
+ * @param word - The string to check
+ * @return TRUE if it is a reserved word, otherwise FALSE
+ */
+boolean is_reserved_word(char *word)
+{
+    if (is_register(word) || find_cmd_info(word) != NULL ||
+        strcmp(word, "data") == 0 || strcmp(word, "string") == 0 ||
+        strcmp(word, "entry") == 0 || strcmp(word, "extern") == 0 ||
+        strcmp(word, "mcro") == 0 || strcmp(word, "mcroend") == 0)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
