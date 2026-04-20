@@ -45,7 +45,6 @@ boolean is_valid_label(char *label)
         if (!isalnum(temp[i++]))
             return log_error(ERR_INVALID_LABEL_NAME, 0, NULL, label);
     }
-    /* TODO: Check if the label is not a register, command or instruction */
     return TRUE;
 }
 
@@ -80,6 +79,13 @@ int calc_DC(char *args, const char *instruction)
         /* Find the opening and closing quotes */
         start = strchr(args, '"');
         end = strrchr(args, '"');
+
+        /* Check if there is extra text BEFORE the opening quote */
+        if (start != NULL && skip_whitespaces(args) != start)
+        {
+            log_error(ERR_SYNTAX_ERROR, 0, NULL, "Invalid text before string");
+            return -1;
+        }
 
         /* Validate that both quotes exist and are different */
         if (end == NULL || start == NULL || end == start)
@@ -190,11 +196,13 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
     /* Handle .extern directive */
     else if (strcmp(directive_name, "extern") == 0)
     {
-        char extern_name[MAX_LINE_LEN];
+        char extern_name[MAX_LABEL_LEN];
         /* Extract the external symbol name */
         get_next_word(&ptr, extern_name, FALSE);
         if (extern_name[0] == '\0')
             return log_error(ERR_MISSING_OPERAND, line_num, fname, ".extern requires a label");
+        if (!is_valid_label(extern_name))
+            return FALSE;
         else
         {
             /* Verify that the symbol isn't already defined in the table */
@@ -215,6 +223,8 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
         get_next_word(&ptr, curr_arg, FALSE);
         if (curr_arg[0] == '\0')
             return log_error(ERR_MISSING_OPERAND, line_num, fname, ".entry requires a label");
+        if (!is_valid_label(curr_arg))
+            return FALSE;
         /* Check for extraneous text after the entry label */
         get_next_word(&ptr, curr_arg, FALSE);
         if (curr_arg[0] != '\0')
@@ -333,5 +343,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
     *DCF = DC;
 
     fclose(file_in);
+    free(am_filename);
+
     return TRUE;
 }
