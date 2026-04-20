@@ -203,10 +203,19 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
             return FALSE;
         else
         {
+            symbol *sym = find_symbol(table, extern_name);
+
             /* Verify that the symbol isn't already defined in the table */
-            if (find_symbol(table, extern_name) != NULL)
+            if (sym != NULL)
+            {
+                /* If the symbol exists and is already defined as extern, it's fine */
+                if (sym->type == SYMBOL_EXTERN)
+                    return TRUE;
+
                 /* throw error, if its already exists (as code, data, or anything else) */
-                return log_error(ERR_SYMBOL_ALREADY_DEFINED, line_num, fname, extern_name);
+                else
+                    return log_error(ERR_SYMBOL_ALREADY_DEFINED, line_num, fname, extern_name);
+            }
 
             /* If it's a new symbol, add it safely */
             add_symbol(table, extern_name, 0, SYMBOL_EXTERN, FALSE);
@@ -219,6 +228,7 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
         /* Check syntax only (entry is handled in 2nd pass) */
         char curr_arg[MAX_LINE_LEN];
         get_next_word(&ptr, curr_arg, FALSE);
+
         if (curr_arg[0] == '\0')
             return log_error(ERR_MISSING_OPERAND, line_num, fname, ".entry requires a label");
         if (!is_valid_label(curr_arg))
@@ -227,6 +237,7 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
         get_next_word(&ptr, curr_arg, FALSE);
         if (curr_arg[0] != '\0')
             return log_error(ERR_EXTRA_TEXT_AFTER_CMD, line_num, fname, curr_arg);
+
         return TRUE;
     }
     return FALSE;
