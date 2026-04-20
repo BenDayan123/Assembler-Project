@@ -43,13 +43,15 @@ void add_macro_line(node *macro, char *line)
         /* Macro already has content - need to append to existing content */
         /* Calculate the new length needed: existing content + new line + null terminator */
         int new_len = strlen(temp->content) + strlen(line) + 1;
+
         /* Expand the memory block to accommodate the new content */
-        temp->content = (char *)realloc(temp->content, new_len);
-        if (!(temp->content))
+        char *ptr = (char *)realloc(temp->content, new_len);
+        if (!ptr)
         {
             log_error(ERR_MEMORY_ALLOCATION_FAILED, 0, NULL, NULL);
             return;
         }
+        temp->content = ptr;
         /* Append the new line to the existing content */
         strcat(temp->content, line);
     }
@@ -121,10 +123,26 @@ boolean run_pre_assembler(char *filename)
 
             /* Create new node and add to list */
             new_macro = create_node(macro_name, NULL);
+
+            /* checking if the macro is vaild - not a register or a command */
+            if (is_register(macro_name) || find_cmd_info(macro_name) != NULL)
+            {
+                log_error(ERR_LABEL_IS_KEYWORD, 0, as_filename, macro_name);
+                free_node(new_macro);
+                continue; /* skip this macro save */
+            }
+
             /* Only add the macro if it doesn't already exist in the list */
             /* This prevents duplicate macro definitions */
             if (search_node(macro_list, macro_name) == NULL)
                 add_node(macro_list, new_macro);
+            else
+            {
+                char msg[MAX_LINE_LEN] = {0};
+                sprintf(msg, "Macro '%s' already defined", macro_name);
+                log_custom_error(msg);
+                free_node(new_macro);
+            }
             /* Set curr_macro to point to this new macro for content collection */
             curr_macro = new_macro;
             inside_mcro = TRUE;
@@ -135,10 +153,36 @@ boolean run_pre_assembler(char *filename)
         /* Case 4: Normal line or macro usage */
         else
         {
-            node *found_macro = search_node(macro_list, first_word);
-            /* If it's a macro name, write its expanded content */
-            /* Otherwise, write the original line as-is */
-            fputs((found_macro == NULL) ? ptr : found_macro->content, file_out);
+            char macro_search_word[MAX_LINE_LEN] = {0};
+            node *found_macro = NULL;
+            boolean is_label = FALSE;
+
+            /* Check if the first word is a label (ends with a colon) */
+            if (first_word[strlen(first_word) - 1] == ':')
+            {
+                is_label = TRUE;
+                /* Extract the second word, which might be the macro name */
+                /* %*s skips the first word (label), %s reads the second word */
+                sscanf(ptr, "%*s %s", macro_search_word);
+            }
+            /* No label found, the first word might be the macro name */
+            else
+                strcpy(macro_search_word, first_word);
+
+            /* Search for the macro in the list */
+            found_macro = search_node(macro_list, macro_search_word);
+
+            if (found_macro != NULL)
+            {
+                /* If a label is present before the macro, print the label first on a new line */
+                if (is_label)
+                    fprintf(file_out, "%s\n", first_word);
+                /* Print the expanded macro content */
+                fputs(found_macro->content, file_out);
+            }
+            /* Not a macro, write the original line as-is to the file */
+            else
+                fputs(ptr, file_out);
         }
     }
     /* Skip dummy head */
@@ -148,5 +192,8 @@ boolean run_pre_assembler(char *filename)
     free_nodes(macro_list);
     fclose(file_in);
     fclose(file_out);
+    free(as_filename);
+    free(am_filename);
+
     return TRUE;
 }
