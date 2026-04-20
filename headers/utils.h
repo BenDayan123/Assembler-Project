@@ -14,5 +14,6 @@ void get_first_word(const char *line, char *word);
 int get_next_word(char **src, char *dest, boolean expect_comma);
 int count_and_validate_data_numbers(char *line);
 int is_register(const char *op);
+boolean is_valid_addressing(int opcode, int op_count, addressing_mode src, addressing_mode dest);
 
 #endif
