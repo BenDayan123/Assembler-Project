@@ -70,7 +70,7 @@ int calc_DC(char *args, const char *instruction)
     /* Handle .string directive */
     if (strcmp(instruction, "string") == 0)
     {
-        char *start, *end;
+        char *start, *end, *check_extra;
         /* Check for empty arguments */
         if (*args == '\0')
             return log_error(ERR_MISSING_OPERAND, 0, NULL, ".string");
@@ -85,6 +85,15 @@ int calc_DC(char *args, const char *instruction)
             log_error(ERR_INVALID_STRING, 0, NULL, ".string");
             return -1;
         }
+
+        /* check if there is not extra text after string */
+        check_extra = skip_whitespaces(end + 1);
+        if (*check_extra != '\0')
+        {
+            log_error(ERR_EXTRA_TEXT_AFTER_CMD, 0, NULL, check_extra);
+            return -1;
+        }
+
         /* Calculate the string length (closing quote - opening quote) */
         /* Add 1 for the null terminator that will be added */
         if (end > start)
@@ -179,14 +188,21 @@ boolean handle_directive(char *ptr, char *type, SymbolTable *table, int *DC, boo
     /* Handle .extern directive */
     else if (strcmp(directive_name, "extern") == 0)
     {
-        /* TODO: Merge the logic of .extern and .entry */
         char extern_name[MAX_LINE_LEN];
         /* Extract the external symbol name */
         get_next_word(&ptr, extern_name, FALSE);
         if (extern_name[0] == '\0')
             return log_error(ERR_MISSING_OPERAND, line_num, fname, ".extern requires a label");
         else
+        {
+            /* Verify that the symbol isn't already defined in the table */
+            if (find_symbol(table, extern_name) != NULL)
+                /* throw error, if its already exists (as code, data, or anything else) */
+                return log_error(ERR_SYMBOL_ALREADY_DEFINED, line_num, fname, extern_name);
+
+            /* If it's a new symbol, add it safely */
             add_symbol(table, extern_name, 0, SYMBOL_EXTERN, FALSE);
+        }
         return TRUE;
     }
     /* Handle .entry directive */
