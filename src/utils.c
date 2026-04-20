@@ -147,10 +147,11 @@ int get_next_word(char **src, char *dest, boolean expect_comma)
     char *curr = *src;
     int i = 0;
 
+    *dest = '\0'; /* Initialize destination to empty string */
+
     /* Check if we've reached the end of the string */
     if (*curr == '\0')
         return -1;
-    *dest = '\0';                  /* Initialize destination to empty string */
     curr = skip_whitespaces(curr); /* Skip leading whitespace */
 
     /* Handle comma-separated parsing if expected */
@@ -237,7 +238,7 @@ int count_and_validate_data_numbers(char *line)
             /* checks if the number value is exceeded 12 bit */
             if (val < -2048 || val > 2047)
             {
-                log_error(ERR_DATA_OUT_OF_RANGE, 0, NULL, ptr);
+                log_error(ERR_DATA_OUT_OF_RANGE, 0, NULL, NULL);
                 return -1;
             }
 
