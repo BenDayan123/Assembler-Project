@@ -444,12 +444,25 @@ boolean is_vaild_command_line(char *cmd_name, char *args, int line, char *filena
  */
 boolean is_reserved_word(char *word)
 {
-    if (is_register(word) || find_cmd_info(word) != NULL ||
-        strcmp(word, "data") == 0 || strcmp(word, "string") == 0 ||
-        strcmp(word, "entry") == 0 || strcmp(word, "extern") == 0 ||
-        strcmp(word, "mcro") == 0 || strcmp(word, "mcroend") == 0)
-    {
+    int i;
+    /* Array of reserved directives and macro keywords */
+    const char *reserved_keywords[] = {
+        "data", "string", "entry", "extern", "mcro", "mcroend"};
+
+    /* Calculate the number of elements in the array dynamically */
+    int num_keywords = sizeof(reserved_keywords) / sizeof(reserved_keywords[0]);
+
+    /* First check if it's a register or a command name */
+    if (is_register(word) || find_cmd_info(word) != NULL)
         return TRUE;
+
+    /* Iterate over the reserved keywords array */
+    for (i = 0; i < num_keywords; i++)
+    {
+        if (strcmp(word, reserved_keywords[i]) == 0)
+            return TRUE;
     }
+
+    /* Not a reserved word */
     return FALSE;
 }
