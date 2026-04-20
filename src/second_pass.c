@@ -417,8 +417,9 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
 
     if (am_file == NULL)
     {
+        log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
         free(am_filename);
-        return log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
+        return FALSE;
     }
 
     /* Process the file line by line */
