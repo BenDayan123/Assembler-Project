@@ -136,6 +136,9 @@ void encode_operand(char *arg, SymbolTable *table, addressing_mode mode, int *IC
     {
         /* Parse the number (skip the '#' prefix) */
         int val = atoi(arg + 1);
+        /* Check if the number value exceeds 12-bit representation */
+        if (val < -2048 || val > 2047)
+            log_error(ERR_DATA_OUT_OF_RANGE, line_number, NULL, arg);
 
         /* Store the immediate value in the code image */
         code_image[*IC].code = val;
