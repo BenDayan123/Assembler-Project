@@ -183,8 +183,11 @@ boolean run_pre_assembler(char *filename)
                 /* If a label is present before the macro, print the label first on a new line */
                 if (is_label)
                     fprintf(file_out, "%s ", first_word);
-                /* Print the expanded macro content */
-                fputs(found_macro->content, file_out);
+                /* Print the expanded macro content only if it's not empty */
+                if (found_macro->content != NULL)
+                    fputs(found_macro->content, file_out);
+                else
+                    fputs("\n", file_out); /* Macro is empty, just print a newline */
             }
             /* Not a macro, write the original line as-is to the file */
             else
