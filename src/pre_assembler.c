@@ -121,6 +121,12 @@ boolean run_pre_assembler(char *filename)
             node *new_macro;
             sscanf(ptr, "%*s %s", macro_name); /* Skip 'mcro' and get name */
 
+            /* Ensure a macro name was actually provided */
+            if (macro_name[0] == '\0')
+            {
+                log_error(ERR_SYNTAX_ERROR, 0, as_filename, "Macro name is missing");
+                continue;
+            }
             /* Create new node and add to list */
             new_macro = create_node(macro_name, NULL);
 

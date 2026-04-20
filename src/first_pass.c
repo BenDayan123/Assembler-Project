@@ -258,6 +258,7 @@ int run_first_pass(char *filename, SymbolTable *table, int *ICF, int *DCF)
     if (file_in == NULL)
     {
         log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
+        free(am_filename);
         return FALSE;
     }
 

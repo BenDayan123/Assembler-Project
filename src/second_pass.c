@@ -416,7 +416,10 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
     ext_list = NULL;
 
     if (am_file == NULL)
+    {
+        free(am_filename);
         return log_error(ERR_OPEN_FILE, 0, NULL, am_filename);
+    }
 
     /* Process the file line by line */
     while (fgets(line, MAX_LINE_LEN, am_file))
@@ -461,7 +464,10 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
 
                 /* checks for collision with .extren */
                 if (sym->type == SYMBOL_EXTERN)
-                    return log_error(ERR_INVALID_OPERAND_TYPE, line_number, am_filename, "Label cannot be both entry and extern");
+                {
+                    log_error(ERR_INVALID_OPERAND_TYPE, line_number, am_filename, "Label cannot be both entry and extern");
+                    continue;
+                }
                 /* Mark the symbol as an entry point */
                 update_symbol(table, label, -1, TRUE);
             }
