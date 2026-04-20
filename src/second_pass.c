@@ -233,7 +233,7 @@ void encode_operand(char *arg, SymbolTable *table, addressing_mode mode, int *IC
  */
 boolean encode_instruction(char *line, SymbolTable *table, int *IC, int line_num)
 {
-    char op_name[MAX_LABEL_LEN], arg1[MAX_LABEL_LEN] = {0}, arg2[MAX_LABEL_LEN] = {0};
+    char op_name[MAX_LINE_LEN], arg1[MAX_LINE_LEN] = {0}, arg2[MAX_LINE_LEN] = {0};
     char *ptr = line;
     unsigned int word;
     int src_mode = 0, dest_mode = 0;
@@ -487,6 +487,7 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
     fclose(am_file);
     free_nodes(ext_list);
     ext_list = NULL;
+    free(am_filename);
 
     return TRUE;
 }
