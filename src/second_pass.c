@@ -433,7 +433,7 @@ int run_second_pass(char *filename, SymbolTable *table, int ICF, int DCF)
         get_first_word(ptr, first_word);
 
         /* If the first word is a label, skip it */
-        if (first_word[strlen(first_word) - 1] == ':')
+        if (strlen(first_word) > 0 && first_word[strlen(first_word) - 1] == ':')
             get_next_word(&ptr, first_word, FALSE);
 
         /* Skip empty lines */

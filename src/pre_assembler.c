@@ -164,7 +164,7 @@ boolean run_pre_assembler(char *filename)
             boolean is_label = FALSE;
 
             /* Check if the first word is a label (ends with a colon) */
-            if (first_word[strlen(first_word) - 1] == ':')
+            if (strlen(first_word) > 0 && first_word[strlen(first_word) - 1] == ':')
             {
                 is_label = TRUE;
                 /* Extract the second word, which might be the macro name */
