@@ -1,47 +1,42 @@
 # 12-Bit Assembler Project
 
-![Language](https://img.shields.io/badge/language-C-blue.svg)
-![Standard](https://img.shields.io/badge/std-C90-green.svg)
+A simple and good Assembler written in **C (ANSI C90 standard)**.
 
-A comprehensive Assembler written in **C (ANSI C90 standard)**.
+This is a project I built for my "Systems Programming Laboratory" course (2026A) at the Open University of Israel. It’s a full assembler written in C, following the ANSI C90 standard.
 
-This project was coded as part of the "20465 - Systems Programming Laboratory" 2025A course at the Open University Israel. <br>
-This program translates assembly language source code into machine code for a hypothetical 12-bit CPU architecture. It handles macro expansion, symbol resolution, and binary encoding through a multi-stage process.
+## 🏗️ How it Works
 
-## 🏗️ Architecture & Workflow
-
-The assembler processes input files (`.as`) in three distinct stages:
+The assembler processes the input files (.as) in three main steps:
 
 ### 1. Pre-Assembler (`pre_assembler.c`)
 
-The first phase scans the source code for macros.
+This is the first stage where the program cleans up the code.
 
-- **Macro Expansion:** Identifies macro definitions blocks (enclosed by `mcro` and `mcroend`).
-- **Processing:** It adds the macro content to a memory dictionary and replaces every occurrence of the macro name with its corresponding code lines.
-- **Output:** Generates an intermediate file (`.am`) with all macros expanded, ready for the main assembly process.
+- **Macro Expansion:** It finds all macro blocks (between mcro and mcroend).
+- **Processing:** It saves the macros in memory and replaces every macro call with the actual lines of code.
+- **Output:** It creates an expanded .am file, which is now ready for the next pass.
 
 ### 2. First Pass (`first_pass.c`)
 
-This stage performs the initial lexical and syntactic analysis of the `.am` file.
+This is where the program does the heavy lifting of checking the code.
 
-- **Syntax Validation:** Checks for syntax errors, invalid commands, or addressing mode violations.
-- **Memory Calculation:** Calculates the Instruction Counter (IC) and Data Counter (DC) to determine the memory footprint.
-- **Symbol Table Construction:** Identifies labels (Symbols) and stores them in a symbol table with their relative addresses and attributes (Code, Data, External).
+- **Syntax Validation:** It looks for errors, bad commands, or wrong addressing modes.
+- **Memory Calculation:** It tracks the Instruction Counter (IC) and Data Counter (DC) to see how much memory is needed.
+- **Symbol Table:** It builds a table of all the labels and symbols used in the code.
 
 ### 3. Second Pass (`second_pass.c`)
 
-The final stage completes the translation to machine code.
+The final stage that generates the actual machine code.
 
-- **Encoding:** Converts instructions and data into 12-bit binary words (represented in Hexadecimal).
-- **Address Resolution:** Resolves the addresses of operands using the symbol table created in the first pass.
-- **Entry/Extern Handling:** Marks entry points and records external symbol usage.
-- **Output Generation:** Produces the final object file (`.ob`), entries file (`.ent`), and externals file (`.ext`).
+- **Final Encoding:** It converts all instructions and data into their final binary format.
+- **Symbol Resolution:** It fills in the final addresses for all the labels.
+- **Output Files:** If everything is correct, it generates the final output files.
 
 ---
 
 ## 🚀 How to Build and Run
 
-### Prerequisites
+### Requirements
 
 - GCC Compiler (GNU Compiler Collection)
 - Make (for makefile)
@@ -53,6 +48,9 @@ Open your terminal and compile the project using the following command:
 ```sh
 make main
 ```
+
+> <ins>**Important!</ins>**
+> Make sure the folders 'build' and 'output' are exists before running, the "make main" command creats the 'output' folder automatically.
 
 ### Running
 
@@ -81,11 +79,11 @@ If you have a file named `test.as`:
 
 ### 📂 Output Files Description
 
-| Extension | Description                                                                                                                                                                                                                                                                |
-| :-------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **.ob**   | **Object File:** Contains the final machine code in hexadecimal format. The first line lists the size of the Code and Data sections. The following lines show the memory address, the 12-bit content (in hex), and the A.R.E. attribute (Absolute, Relocatable, External). |
-| **.ent**  | **Entries File:** generated only if the code contains `.entry` directives. It lists the names of labels defined in this file that are exported for use in other files, along with their memory addresses.                                                                  |
-| **.ext**  | **Externals File:** Generated only if the code uses external symbols (defined via `.extern`). It lists the name of the external label and the memory addresses where it is referenced in the code.                                                                         |
+| Extension | Description                                                                                            |
+| :-------- | :----------------------------------------------------------------------------------------------------- |
+| **.ob**   | **Object File:** The final machine code in hex format, showing memory addresses and A.R.E. attributes. |
+| **.ent**  | **Entries File:** Created if you used .entry, listing labels that other files can access.              |
+| **.ext**  | **Externals File:** Created if you used .extern, showing where external labels are used in the code.   |
 
 ---
 

@@ -2,8 +2,6 @@
  * File: main.c
  * Description: Entry point for the assembler program.
  * Orchestrates the three-phase assembly process: pre-assembly, first pass, and second pass.
- *
- * GitHub Repository: 'https://github.com/BenDayan123/Assembler-Project'
  */
 #include <stdio.h>
 #include "../headers/globals.h"
@@ -89,5 +87,3 @@ int main(int argc, char *argv[])
     /* Exit with success code */
     return 0;
 }
-
-/* ----- GitHub Repository: 'https://github.com/BenDayan123/Assembler-Project' ---- */
